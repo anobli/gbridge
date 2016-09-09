@@ -20,6 +20,7 @@
 #define _DEBUG_H_
 
 #include <stdio.h>
+#include <stdint.h>
 
 enum log_level {
 	LL_ERROR = 0,
@@ -28,6 +29,8 @@ enum log_level {
 	LL_DEBUG,
 	LL_VERBOSE
 };
+
+#define LINE_COUNT	16
 
 #define ll_print(ll, format, ...)			\
 	do {						\
@@ -46,6 +49,13 @@ enum log_level {
 
 #define pr_dbg(format, ...) \
 	ll_print(LL_DEBUG, format, ##__VA_ARGS__)
+
+void _pr_dump(const char *sfn, uint8_t *data, size_t len);
+
+#define pr_dump(data, len)					\
+	do {							\
+		_pr_dump(__func__, (uint8_t *)(data), len);	\
+	} while(0)
 
 extern int log_level;
 

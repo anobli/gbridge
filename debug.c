@@ -18,9 +18,28 @@
 
 #include <debug.h>
 
-int log_level = 0;
+int log_level = LL_VERBOSE;
 
 void set_log_level(int ll)
 {
 	log_level = ll;
+}
+
+void _pr_dump(const char *fn, uint8_t *data, size_t len)
+{
+	int j;
+	int i = 0;
+
+	if (log_level < LL_VERBOSE)
+		return;
+
+	printf("%s:\n", fn);
+	while (i < len) {
+		for (j = 0; j < LINE_COUNT; i++, j++) {
+			if (i >= len)
+				break;
+			printf("%02x ", data[i]);
+		}
+		printf("\n");
+	}
 }
