@@ -19,6 +19,7 @@
 #include <signal.h>
 
 #include <debug.h>
+#include <controller.h>
 
 #include "gbridge.h"
 #include "netlink.h"
@@ -54,7 +55,12 @@ int main(int argc, char *argv[])
 		goto err_netlink_exit;
 	}
 
+	controllers_init();
+
 	netlink_loop();
+
+	controllers_exit();
+
 	netlink_exit();
 
 	return 0;

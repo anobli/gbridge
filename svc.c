@@ -22,12 +22,43 @@
 #include <string.h>
 
 #include <gbridge.h>
+#include <controller.h>
 
 /* TODO: Can we use other IDs ? */
 #define ENDO_ID 0x4755
 #define AP_INTF_ID 0x0
 
 static int svc_send_hello_request(void);
+
+static int svc_dme_peer_get_response(struct operation *op, uint16_t result_code,
+				     uint32_t attr_value)
+{
+	struct gb_svc_dme_peer_get_response *resp;
+	size_t op_size = sizeof(*resp);
+
+	if (greybus_alloc_response(op, op_size))
+		return -ENOMEM;
+
+	resp = operation_to_response(op);
+	resp->result_code = htole16(result_code);
+	resp->attr_value = htole32(attr_value);
+
+	return 0;
+}
+
+static int svc_dme_peer_set_response(struct operation *op, uint16_t result_code)
+{
+	struct gb_svc_dme_peer_set_response *resp;
+	size_t op_size = sizeof(*resp);
+
+	if (greybus_alloc_response(op, op_size))
+		return -ENOMEM;
+
+	resp = operation_to_response(op);
+	resp->result_code = htole16(result_code);
+
+	return 0;
+}
 
 static int svc_interface_v_sys_enable_response(struct operation *op,
 					       uint8_t result_code)
@@ -144,6 +175,50 @@ static int svc_interface_device_id_request(struct operation *op)
 	return 0;
 }
 
+static int svc_connection_create_request(struct operation *op)
+{
+	struct gb_svc_conn_create_request *req;
+	uint8_t intf1_id;
+	uint16_t cport1_id;
+	uint8_t intf2_id;
+	uint16_t cport2_id;
+
+	req = operation_to_request(op);
+	intf1_id = req->intf1_id;
+	cport1_id = le16toh(req->cport1_id);
+	intf2_id = req->intf2_id;
+	cport2_id = le16toh(req->cport2_id);
+
+	return connection_create(intf1_id, cport1_id, intf2_id, cport2_id);
+}
+
+static int svc_connection_destroy_request(struct operation *op)
+{
+	struct gb_svc_conn_destroy_request *req;
+	uint8_t intf1_id;
+	uint16_t cport1_id;
+	uint8_t intf2_id;
+	uint16_t cport2_id;
+
+	req = operation_to_request(op);
+	intf1_id = req->intf1_id;
+	cport1_id = le16toh(req->cport1_id);
+	intf2_id = req->intf2_id;
+	cport2_id = le16toh(req->cport2_id);
+
+	return connection_destroy(intf1_id, cport1_id, intf2_id, cport2_id);
+}
+
+static int svc_dme_peer_get_request(struct operation *op)
+{
+	return svc_dme_peer_get_response(op, 0, 0x0126);
+}
+
+static int svc_dme_peer_set_request(struct operation *op)
+{
+	return svc_dme_peer_set_response(op, 0);
+}
+
 static int svc_interface_v_sys_enable_request(struct operation *op)
 {
 	return svc_interface_v_sys_enable_response(op, GB_SVC_INTF_VSYS_OK);
@@ -212,6 +287,14 @@ int svc_handler(struct operation *op)
 		return svc_ping_request(op);
 	case GB_SVC_TYPE_INTF_DEVICE_ID:
 		return svc_interface_device_id_request(op);
+	case GB_SVC_TYPE_CONN_CREATE:
+		return svc_connection_create_request(op);
+	case GB_SVC_TYPE_CONN_DESTROY:
+		return svc_connection_destroy_request(op);
+	case GB_SVC_TYPE_DME_PEER_GET:
+		return svc_dme_peer_get_request(op);
+	case GB_SVC_TYPE_DME_PEER_SET:
+		return svc_dme_peer_set_request(op);
 	case GB_SVC_TYPE_INTF_HOTPLUG:
 		return svc_interface_hotplug_request(op);
 	case GB_SVC_TYPE_INTF_HOT_UNPLUG:

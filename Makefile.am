@@ -7,4 +7,5 @@ gbridge_SOURCES = main.c \
 		  netlink.c \
 		  debug.c \
 		  greybus.c \
-		  svc.c
+		  svc.c \
+		  controller.c
