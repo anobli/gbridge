@@ -25,14 +25,42 @@
 
 #define __packed  __attribute__((__packed__))
 
-/* Include kernel headers */
 #include <greybus.h>
 #include <greybus_protocols.h>
 #include <gb_netlink.h>
 
 #define SVC_CPORT		0
+#define OP_RESPONSE		0x80
+
+struct operation {
+	struct gb_operation_msg_hdr *req;
+	struct gb_operation_msg_hdr *resp;
+	uint16_t cport_id;
+	 TAILQ_ENTRY(operation) cnode;
+};
+
+typedef int (*greybus_handler_t) (struct operation *);
+
+#define operation_to_request(op)	\
+	(void *)((op)->req + 1)
+
+#define operation_to_response(op)	\
+	(void *)((op)->resp + 1)
 
 #define gb_operation_msg_size(hdr)	\
 	le16toh(((struct gb_operation_msg_hdr *)(hdr))->size)
+
+int svc_init(void);
+int svc_handler(struct operation *op);
+int svc_send_intf_hotplug_event(uint8_t intf_id,
+				uint32_t vendor_id,
+				uint32_t product_id, uint64_t serial_number);
+
+int greybus_init(void);
+struct operation *greybus_alloc_operation(uint8_t type,
+					  void *payload, size_t len);
+int greybus_alloc_response(struct operation *op, size_t size);
+int greybus_send_request(uint16_t cport_id, struct operation *op);
+int greybus_handler(uint16_t cport_id, struct gb_operation_msg_hdr *hdr);
 
 #endif /* _GBRIDGE_H_ */

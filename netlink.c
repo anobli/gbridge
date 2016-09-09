@@ -40,6 +40,7 @@ parse_gb_nl_msg(struct nl_cache_ops *unused, struct genl_cmd *cmd,
 	struct gb_operation_msg_hdr *hdr;
 	uint16_t hd_cport_id;
 	size_t len;
+	int ret;
 
 	if (!info->attrs[GB_NL_A_DATA] || !info->attrs[GB_NL_A_CPORT])
 		return -EPROTO;
@@ -54,7 +55,11 @@ parse_gb_nl_msg(struct nl_cache_ops *unused, struct genl_cmd *cmd,
 	}
 
 	if (hd_cport_id == SVC_CPORT) {
-		/* TODO: handle SVC operations */
+		ret = greybus_handler(hd_cport_id, hdr);
+		if (ret) {
+			pr_err("Failed to handle svc operation %d: %d\n",
+			       hdr->type, ret);
+		}
 	} else {
 		/* TODO: transfer data to modules */
 	}

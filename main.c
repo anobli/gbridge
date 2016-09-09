@@ -19,6 +19,8 @@
 #include <signal.h>
 
 #include <debug.h>
+
+#include "gbridge.h"
 #include "netlink.h"
 
 static void signal_handler(int sig)
@@ -34,14 +36,33 @@ int main(int argc, char *argv[])
 	signal(SIGHUP, signal_handler);
 	signal(SIGTERM, signal_handler);
 
+	ret = greybus_init();
+	if (ret) {
+		pr_err("Failed to init Greybus\n");
+		return ret;
+	}
+
 	ret = netlink_init();
 	if (ret) {
 		pr_err("Failed to init netlink\n");
 		return ret;
 	}
 
+	ret = svc_init();
+	if (ret) {
+		pr_err("Failed to init SVC\n");
+		goto err_netlink_exit;
+	}
+
 	netlink_loop();
 	netlink_exit();
 
 	return 0;
+
+ err_netlink_exit:
+	netlink_cancel();
+	netlink_loop();
+	netlink_exit();
+
+	return ret;
 }
