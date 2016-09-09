@@ -13,6 +13,7 @@ AC_PROG_INSTALL
 AC_CHECK_LIB([nl-3], [nl_socket_alloc])
 AC_CHECK_LIB([nl-genl-3], [genl_register_family])
 AC_CHECK_LIB([pthread], [pthread_create])
+AC_CHECK_LIB([bluetooth], [hci_inquiry])
 
 AC_CONFIG_SRCDIR([main.c])
 AC_CONFIG_HEADERS([config.h])

@@ -62,7 +62,9 @@ parse_gb_nl_msg(struct nl_cache_ops *unused, struct genl_cmd *cmd,
 			       hdr->type, ret);
 		}
 	} else {
-		ret = controller_write(hd_cport_id, hdr, gb_operation_msg_size(hdr));
+		ret =
+		    controller_write(hd_cport_id, hdr,
+				     gb_operation_msg_size(hdr));
 	}
 
 	return 0;
