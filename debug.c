@@ -16,32 +16,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <signal.h>
-
 #include <debug.h>
-#include "netlink.h"
 
-static void signal_handler(int sig)
+int log_level = 0;
+
+void set_log_level(int ll)
 {
-	netlink_cancel();
-}
-
-int main(int argc, char *argv[])
-{
-	int ret;
-
-	signal(SIGINT, signal_handler);
-	signal(SIGHUP, signal_handler);
-	signal(SIGTERM, signal_handler);
-
-	ret = netlink_init();
-	if (ret) {
-		pr_err("Failed to init netlink\n");
-		return ret;
-	}
-
-	netlink_loop();
-	netlink_exit();
-
-	return 0;
+	log_level = ll;
 }

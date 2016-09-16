@@ -16,32 +16,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <signal.h>
+#ifndef _GBRIDGE_NETLINK_H_
+#define _GBRIDGE_NETLINK_H_
 
-#include <debug.h>
-#include "netlink.h"
+#include <stdint.h>
 
-static void signal_handler(int sig)
-{
-	netlink_cancel();
-}
+int netlink_init(void);
+void netlink_cancel(void);
+void netlink_exit(void);
+void netlink_loop(void);
 
-int main(int argc, char *argv[])
-{
-	int ret;
+int netlink_send(uint16_t cport_id, void *data, size_t len);
 
-	signal(SIGINT, signal_handler);
-	signal(SIGHUP, signal_handler);
-	signal(SIGTERM, signal_handler);
-
-	ret = netlink_init();
-	if (ret) {
-		pr_err("Failed to init netlink\n");
-		return ret;
-	}
-
-	netlink_loop();
-	netlink_exit();
-
-	return 0;
-}
+#endif /* _GBRIDGE_NETLINK_H_ */

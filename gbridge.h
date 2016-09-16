@@ -16,32 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <signal.h>
+#ifndef _GBRIDGE_H_
+#define _GBRIDGE_H_
 
-#include <debug.h>
-#include "netlink.h"
+#include <stdint.h>
+#include <linux/types.h>
+#include <sys/queue.h>
 
-static void signal_handler(int sig)
-{
-	netlink_cancel();
-}
+#define __packed  __attribute__((__packed__))
 
-int main(int argc, char *argv[])
-{
-	int ret;
+/* Include kernel headers */
+#include <greybus.h>
+#include <greybus_protocols.h>
+#include <gb_netlink.h>
 
-	signal(SIGINT, signal_handler);
-	signal(SIGHUP, signal_handler);
-	signal(SIGTERM, signal_handler);
+#define SVC_CPORT		0
 
-	ret = netlink_init();
-	if (ret) {
-		pr_err("Failed to init netlink\n");
-		return ret;
-	}
+#define gb_operation_msg_size(hdr)	\
+	le16toh(((struct gb_operation_msg_hdr *)(hdr))->size)
 
-	netlink_loop();
-	netlink_exit();
-
-	return 0;
-}
+#endif /* _GBRIDGE_H_ */

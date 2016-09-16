@@ -9,13 +9,20 @@ AM_INIT_AUTOMAKE
 AC_PROG_CC
 AC_PROG_INSTALL
 
-# Checks for library functions.
-AC_CHECK_FUNCS([memset mkdir strerror strtol])
+# Checks for libraries.
+AC_CHECK_LIB([nl-3], [nl_socket_alloc])
+AC_CHECK_LIB([nl-genl-3], [genl_register_family])
+AC_CHECK_LIB([pthread], [pthread_create])
 
 AC_CONFIG_SRCDIR([main.c])
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES([
 	Makefile
+])
+
+AC_ARG_VAR([GBDIR], ["greybus sources directory"])
+AS_IF([test "$GBDIR" = ""], [
+  AC_MSG_ERROR([Environment variable GBDIR needs to be set])
 ])
 
 AC_OUTPUT

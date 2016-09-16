@@ -16,32 +16,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <signal.h>
+#ifndef _DEBUG_H_
+#define _DEBUG_H_
 
-#include <debug.h>
-#include "netlink.h"
+#include <stdio.h>
 
-static void signal_handler(int sig)
-{
-	netlink_cancel();
-}
+enum log_level {
+	LL_ERROR = 0,
+	LL_WARNING,
+	LL_INFO,
+	LL_DEBUG,
+	LL_VERBOSE
+};
 
-int main(int argc, char *argv[])
-{
-	int ret;
+#define ll_print(ll, format, ...)			\
+	do {						\
+		if (log_level >= ll)			\
+			printf(format, ##__VA_ARGS__);	\
+	} while (0)
 
-	signal(SIGINT, signal_handler);
-	signal(SIGHUP, signal_handler);
-	signal(SIGTERM, signal_handler);
+#define pr_err(format, ...) \
+	ll_print(LL_ERROR, format, ##__VA_ARGS__)
 
-	ret = netlink_init();
-	if (ret) {
-		pr_err("Failed to init netlink\n");
-		return ret;
-	}
+#define pr_warn(format, ...) \
+	ll_print(LL_WARNING, format, ##__VA_ARGS__)
 
-	netlink_loop();
-	netlink_exit();
+#define pr_info(format, ...) \
+	ll_print(LL_INFO, format, ##__VA_ARGS__)
 
-	return 0;
-}
+#define pr_dbg(format, ...) \
+	ll_print(LL_DEBUG, format, ##__VA_ARGS__)
+
+extern int log_level;
+
+void set_log_level(int ll);
+
+#endif /* _DEBUG_H_ */
