@@ -1,0 +1,39 @@
+GBridge (Greybus Bridge)
+
+Greybus is a protocol layer for UniPro bus.
+It was supposed to be used by modular phones to control modules.
+
+GBridge is an application that can be used to support other bus / network,
+such as TCP/IP or bluetooth. 
+
+I) SVC
+The SVC take a central piece in Greybus.
+It is in charge of module hot plug / hot unplug detection,
+create / destroy connections, etc.
+In modular phones, the SVC is a micro-controller but here,
+we don't have a micro-controller to detect modules,
+so we have to simulate it.
+
+SVC protocol has been made for UniPro.
+Most of the SVC operations are useless or not adapted for non UniPro modules.
+The current implementation of SVC protocol only implements the mandatory
+operations though some of them are not correctly implemented
+(such as DME operations).
+
+II) Netlink
+GBridge is using netlink to communicate with Greybus.
+Currently, netlink is only used to transmit Greybus operations,
+but it's planned to use it to control Greybus when SVC protocol is not adapted.
+
+II) Controller
+The controller is actually the link between the SVC, netlink and all the
+modules.
+The controller is actually handling some operations made by SVC in phones,
+such as modules detection and connection.
+
+a) Bluetooth controller
+The Bluetooth controller scans continuously to detect new bluetooth module.
+When a Bluetooth module with the "GREYBUS" string in its name show up,
+the controller will generate an hotplug event and create a connection.
+Currently, the controller open a RFCOMM socket that is not available for BLE.
+It's planned to use L2CAP instead of RFCOMM to support both Bluetooth and BLE.
