@@ -325,6 +325,9 @@ static void controller_loop_exit(struct controller *ctrl)
 	if (!ctrl->event_loop)
 		return;
 
+	if (ctrl->event_loop_stop)
+		ctrl->event_loop_stop(ctrl);
+
 	pthread_cancel(ctrl->thread);
 	pthread_join(ctrl->thread, NULL);
 }

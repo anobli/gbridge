@@ -51,6 +51,7 @@ struct controller {
 	int (*init) (struct controller * ctrl);
 	void (*exit) (struct controller * ctrl);
 	int (*event_loop) (struct controller * ctrl);
+	void (*event_loop_stop) (struct controller * ctrl);
 
 	int (*interface_create) (struct interface * intf);
 	void (*interface_destroy) (struct interface * intf);
