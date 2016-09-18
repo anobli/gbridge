@@ -257,8 +257,10 @@ int
 connection_create(uint8_t intf1_id, uint16_t cport1_id,
 		  uint8_t intf2_id, uint16_t cport2_id)
 {
+	int ret;
 	struct interface *intf;
 	struct connection *conn;
+	struct controller *ctrl;
 
 	intf = get_interface(intf2_id);
 	if (!intf)
@@ -271,21 +273,43 @@ connection_create(uint8_t intf1_id, uint16_t cport1_id,
 	conn->intf = intf;
 	conn->cport1_id = cport1_id;
 	conn->cport2_id = cport2_id;
+
+	ctrl = intf->ctrl;
+	if (ctrl->connection_create) {
+		ret = ctrl->connection_create(conn);
+		if (ret)
+			goto err_free_conn;
+	}
+
 	TAILQ_INSERT_TAIL(&connections, conn, node);
 
 	return 0;
+
+err_free_conn:
+	free(conn);
+	return ret;
 }
 
 int
 connection_destroy(uint8_t intf1_id, uint16_t cport1_id,
 		   uint8_t intf2_id, uint16_t cport2_id)
 {
+	struct interface *intf;
 	struct connection *conn;
+	struct controller *ctrl;
+
+	intf = get_interface(intf2_id);
+	if (!intf)
+		return -EINVAL;
 
 	conn = hd_cport_id_to_connection(cport1_id);
 	if (!conn) {
 		return -EINVAL;
 	}
+
+	ctrl = intf->ctrl;
+	if (ctrl->connection_destroy)
+		ctrl->connection_destroy(conn);
 
 	TAILQ_REMOVE(&connections, conn, node);
 	free(conn);

@@ -28,6 +28,9 @@ struct connection {
 	uint16_t cport1_id;
 	uint16_t cport2_id;
 	struct interface *intf;
+
+	void *priv;
+
 	 TAILQ_ENTRY(connection) node;
 };
 
@@ -55,6 +58,8 @@ struct controller {
 
 	int (*interface_create) (struct interface * intf);
 	void (*interface_destroy) (struct interface * intf);
+	int (*connection_create) (struct connection * conn);
+	int (*connection_destroy) (struct connection * conn);
 
 	int (*write) (struct connection * conn, void *data, size_t len);
 	int (*read) (struct connection * conn, void *data, size_t len);
