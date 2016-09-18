@@ -360,6 +360,7 @@ static void register_controller(struct controller *controller)
 static void register_controllers(void)
 {
 	register_controller(&bluetooth_controller);
+	register_controller(&tcpip_controller);
 }
 
 static void *controller_loop(void *data)

@@ -10,4 +10,5 @@ gbridge_SOURCES = main.c \
 		  greybus.c \
 		  svc.c \
 		  controller.c \
-		  bluetooth.c
+		  bluetooth.c \
+		  tcpip.c
