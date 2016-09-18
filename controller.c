@@ -253,6 +253,32 @@ static struct interface *get_interface(uint8_t intf_id)
 	return NULL;
 }
 
+void *connection_recv(void *data)
+{
+	int ret;
+	struct connection *conn = data;
+	struct interface *intf = conn->intf;
+	struct controller *ctrl = intf->ctrl;
+	uint8_t buffer[GB_NETLINK_MTU];
+
+	while (1) {
+		ret = ctrl->read(conn, buffer, GB_NETLINK_MTU);
+		if (ret < 0) {
+			pr_err("Failed to read data: %d\n", ret);
+			continue;
+		}
+
+		pr_dump(buffer, ret);
+
+		ret = netlink_send(conn->cport1_id, buffer, ret);
+		if (ret < 0) {
+			pr_err("Failed to transmit data\n");
+		}
+	}
+
+	return NULL;
+}
+
 int
 connection_create(uint8_t intf1_id, uint16_t cport1_id,
 		  uint8_t intf2_id, uint16_t cport2_id)
@@ -281,10 +307,19 @@ connection_create(uint8_t intf1_id, uint16_t cport1_id,
 			goto err_free_conn;
 	}
 
+	if (ctrl->read) {
+		ret = pthread_create(&conn->thread, NULL,
+				     connection_recv, conn);
+		if (ret)
+			goto err_conn_destroy;
+	}
+
 	TAILQ_INSERT_TAIL(&connections, conn, node);
 
 	return 0;
 
+err_conn_destroy:
+	ctrl->connection_destroy(conn);
 err_free_conn:
 	free(conn);
 	return ret;

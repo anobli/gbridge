@@ -32,6 +32,7 @@ struct connection {
 	void *priv;
 
 	 TAILQ_ENTRY(connection) node;
+	pthread_t thread;
 };
 
 struct interface {
