@@ -87,6 +87,42 @@ static int tcpip_connection_create(struct connection *conn)
 	return 0;
 }
 
+static void tcpip_hotplug(struct controller *ctrl, const char *host_name,
+			  const AvahiAddress *address, uint16_t port)
+{
+	struct interface *intf;
+	struct tcpip_device *td;
+
+	td = malloc(sizeof(*td));
+	if (!td)
+		goto exit;
+
+	td->port = port;
+	avahi_address_snprint(td->addr, sizeof(td->addr), address);
+	td->host_name = malloc(strlen(host_name) + 1);
+	if (!td->host_name)
+		goto err_free_td;
+	strcpy(td->host_name, host_name);
+
+	/* FIXME: use real IDs */
+	intf = interface_create(ctrl, 1, 1, 0x1234, td);
+	if (!intf)
+		goto err_free_host_name;
+
+	if (interface_hotplug(intf))
+		goto err_intf_destroy;
+
+	return;
+
+err_intf_destroy:
+	interface_destroy(intf);
+err_free_host_name:
+	free(td->host_name);
+err_free_td:
+	free(td);
+exit:
+	pr_err("Failed to hotplug of TCP/IP module\n");
+}
 
 static void resolve_callback(AvahiServiceResolver *r,
 			     AvahiIfIndex interface,
@@ -103,7 +139,7 @@ static void resolve_callback(AvahiServiceResolver *r,
 			     void* userdata)
 {
 	AvahiClient *c;
-	struct tcpip_device *td = userdata;
+	struct controller *ctrl = userdata;
 
 	switch (event) {
 	case AVAHI_RESOLVER_FAILURE:
@@ -115,12 +151,7 @@ static void resolve_callback(AvahiServiceResolver *r,
 		break;
 
 	case AVAHI_RESOLVER_FOUND:
-		avahi_address_snprint(td->addr, sizeof(td->addr), address);
-		td->host_name = malloc(strlen(host_name) + 1);
-		if (!td->host_name)
-			return;
-		strcpy(td->host_name, host_name);
-		td->port = port;
+		tcpip_hotplug(ctrl, host_name, address, port);
 		break;
 	}
 
@@ -141,8 +172,6 @@ static void browse_callback(AvahiServiceBrowser *b,
 	struct tcpip_controller *tcpip_ctrl = ctrl->priv;
 	AvahiClient *c = tcpip_ctrl->client;
 	AvahiServiceResolver *r;
-	struct tcpip_device *td;
-	struct interface *intf;
 
 	switch (event) {
 	case AVAHI_BROWSER_FAILURE:
@@ -153,27 +182,14 @@ static void browse_callback(AvahiServiceBrowser *b,
 		return;
 
 	case AVAHI_BROWSER_NEW:
-		td = malloc(sizeof(*td));
-		if (!td)
-			return;
-
 		r = avahi_service_resolver_new(c, interface, protocol,
 					       name, type, domain,
 					       AVAHI_PROTO_UNSPEC, 0,
-					       resolve_callback, td);
+					       resolve_callback, userdata);
 		if (!r) {
 			pr_err("Failed to resolve service '%s': %s\n",
 				name, avahi_strerror(avahi_client_errno(c)));
-			goto err_free_td;
 		}
-
-		/* FIXME: use real IDs */
-		intf = interface_create(ctrl, 1, 1, 0x1234, td);
-		if (!intf)
-			goto err_free_td;
-
-		if (interface_hotplug(intf))
-			goto err_intf_destroy;
 
 		return;
 
@@ -184,11 +200,6 @@ static void browse_callback(AvahiServiceBrowser *b,
 	default:
 		return;
 	}
-
-err_intf_destroy:
-	interface_destroy(intf);
-err_free_td:
-	free(td);
 }
 
 static void client_callback(AvahiClient *c,
