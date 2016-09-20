@@ -49,3 +49,36 @@ The controller will open one socket per cport, so there no need to store
 the cport number number in Greybus operation.
 The connection is initiated by the controller, so the module must open
 a socket for each cport to connect.
+
+IV) Build
+a) Greybus
+To build gbridge, you will need Greybus sources.
+git clone https://github.com/anobli/greybus.git -b gb_netlink
+cd greybus
+make && sudo make install
+
+b) gbridge
+git clone https://github.com/anobli/gbridge.git
+cd gbridge
+autoconf
+automake --add-missing
+GBDIR=path/to/greybus/ ./configure
+make
+
+V) Usage
+a) Kernel
+First, you need to load Greybus module:
+modprobe gb_netlink # will also load greybus module
+
+After, you should load modules for protocols you want to use:
+modprobe gb_phy
+modprobe gb_loopback
+and so on.
+
+b) gbridge
+./gbridge
+That's it. Nothing else to do!
+gbridge will detect new modules on bluetooth or TCP/IP and then
+it will send hotplug event to Greybus.
+Then, Greybus will try to connect to module, get manifest and create
+the appropriate devices and entries in sysfs.
