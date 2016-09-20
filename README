@@ -37,3 +37,5 @@ When a Bluetooth module with the "GREYBUS" string in its name show up,
 the controller will generate an hotplug event and create a connection.
 Currently, the controller open a RFCOMM socket that is not available for BLE.
 It's planned to use L2CAP instead of RFCOMM to support both Bluetooth and BLE.
+Because RFCOMM doesn't have any notion of channel, the controller use the
+padding bytes in operation header to store the cport number.
