@@ -265,7 +265,12 @@ void *connection_recv(void *data)
 		ret = ctrl->read(conn, buffer, GB_NETLINK_MTU);
 		if (ret < 0) {
 			pr_err("Failed to read data: %d\n", ret);
-			continue;
+			break;
+		}
+
+		if (ret == 0) {
+			pr_err("Read is expected to be blocking!\n");
+			break;
 		}
 
 		pr_dump(buffer, ret);
