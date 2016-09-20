@@ -39,3 +39,13 @@ Currently, the controller open a RFCOMM socket that is not available for BLE.
 It's planned to use L2CAP instead of RFCOMM to support both Bluetooth and BLE.
 Because RFCOMM doesn't have any notion of channel, the controller use the
 padding bytes in operation header to store the cport number.
+
+b) TCP/IP
+The controller use avahi to detect a new module.
+The controller only add module with a "_greybus._tcp" service.
+Avahi is currently the easiest way to detect a new device on the host but
+may be it is not adapted for the small microcontrollers used for IOT.
+The controller will open one socket per cport, so there no need to store
+the cport number number in Greybus operation.
+The connection is initiated by the controller, so the module must open
+a socket for each cport to connect.
