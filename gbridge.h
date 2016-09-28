@@ -62,6 +62,7 @@ int svc_handler(struct operation *op);
 int svc_send_intf_hotplug_event(uint8_t intf_id,
 				uint32_t vendor_id,
 				uint32_t product_id, uint64_t serial_number);
+void svc_watchdog_disable(void);
 
 int greybus_init(void);
 struct operation *greybus_alloc_operation(uint8_t type,

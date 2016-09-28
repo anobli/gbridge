@@ -20,7 +20,12 @@
 #include <endian.h>
 #include <stdint.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
+#include <fcntl.h>
 
+#include <debug.h>
 #include <gbridge.h>
 #include <controller.h>
 
@@ -376,4 +381,19 @@ int svc_send_intf_hotplug_event(uint8_t intf_id,
 int svc_init(void)
 {
 	return svc_send_protocol_version_request();
+}
+
+void svc_watchdog_disable(void)
+{
+	int fd;
+
+	/* FIXME: Shouldn't be hardcoded */
+	fd = open("/sys/bus/greybus/devices/1-svc/watchdog", O_WRONLY);
+	if (fd < 0) {
+		perror("Failed to open watchdog");
+		return;
+	}
+
+	if (write(fd, "0", 1) != 1)
+		perror("Failed to disable watchdog\n");
 }

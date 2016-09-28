@@ -192,6 +192,7 @@ void netlink_loop(void)
 
 void netlink_cancel(void)
 {
+	svc_watchdog_disable();
 	pthread_cancel(nl_recv_thread);
 }
 
