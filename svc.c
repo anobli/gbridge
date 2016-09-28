@@ -300,6 +300,9 @@ int svc_handler(struct operation *op)
 		return svc_dme_peer_get_request(op);
 	case GB_SVC_TYPE_DME_PEER_SET:
 		return svc_dme_peer_set_request(op);
+	case GB_SVC_TYPE_ROUTE_CREATE:
+	case GB_SVC_TYPE_ROUTE_DESTROY:
+		return 0;
 	case GB_SVC_TYPE_INTF_HOTPLUG:
 		return svc_interface_hotplug_request(op);
 	case GB_SVC_TYPE_INTF_HOT_UNPLUG:
