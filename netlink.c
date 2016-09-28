@@ -133,6 +133,39 @@ int netlink_send(uint16_t hd_cport_id, void *data, size_t len)
 	return ret;
 }
 
+static int netlink_hd_reset(void)
+{
+	struct nl_msg *msg;
+	void *hdr;
+	int ret;
+
+	msg = nlmsg_alloc();
+	if (!msg) {
+		pr_err("Failed to allocate netlink message\n");
+		ret = -ENOMEM;
+		goto err_msg_free;
+	}
+
+	hdr = genlmsg_put(msg, NL_AUTO_PORT, NL_AUTO_SEQ, ops.o_id,
+			  0, 0, GB_NL_C_HD_RESET, 0);
+	if (!hdr) {
+		pr_err("Failed to write header\n");
+		ret = -ENOMEM;
+		goto err_msg_free;
+	}
+
+	ret = nl_send_auto(sock, msg);
+	if (ret < 0)
+		pr_err("Failed to send message: %s\n", nl_geterror(ret));
+
+	return 0;
+
+ err_msg_free:
+	nlmsg_free(msg);
+
+	return ret;
+}
+
 void *nl_recv_cb(void *data)
 {
 	int ret;
@@ -198,6 +231,7 @@ void netlink_cancel(void)
 
 void netlink_exit(void)
 {
+	netlink_hd_reset();
 	nl_close(sock);
 	nl_socket_free(sock);
 }
