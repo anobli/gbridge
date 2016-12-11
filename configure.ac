@@ -42,6 +42,16 @@ AC_ARG_ENABLE([tcpip],
 esac])
 AM_CONDITIONAL([TPCIP], [test x$tcpip = xtrue])
 
+AC_ARG_ENABLE([uart],
+[  --enable-uart    Enable uart],
+[case "${enableval}" in
+	yes) uart=true ;
+	     AC_DEFINE([HAVE_UART], [1], ["UART support"]) ;;
+	no)  uart=false ;;
+	*) AC_MSG_ERROR([bad value ${enableval} for --enable-uart]) ;;
+esac])
+AM_CONDITIONAL([UART], [test x$uart = xtrue])
+
 AC_ARG_VAR([GBDIR], ["greybus sources directory"])
 AS_IF([test "$GBDIR" = ""], [
   AC_MSG_ERROR([Environment variable GBDIR needs to be set])

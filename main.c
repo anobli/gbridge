@@ -16,13 +16,28 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <errno.h>
 #include <signal.h>
+#include <unistd.h>
 
 #include <debug.h>
 #include <controller.h>
 
 #include "gbridge.h"
 #include "netlink.h"
+#include "uart.h"
+
+static void help(void)
+{
+	printf("gbridge: Greybus bridge application\n"
+		"\t-h: Print the help\n"
+#ifdef HAVE_UART
+		"uart options:\n"
+		"\t-p uart_device: set the uart device\n"
+		"\t-b baudrate: set the uart baudrate\n"
+#endif
+		);
+}
 
 static void signal_handler(int sig)
 {
@@ -31,11 +46,32 @@ static void signal_handler(int sig)
 
 int main(int argc, char *argv[])
 {
+	int c;
 	int ret;
+
+	int baudrate = 115200;
+	const char *uart = NULL;
 
 	signal(SIGINT, signal_handler);
 	signal(SIGHUP, signal_handler);
 	signal(SIGTERM, signal_handler);
+
+	while ((c = getopt(argc, argv, "p:b:")) != -1) {
+		switch(c) {
+		case 'p':
+			uart = optarg;
+			break;
+		case 'b':
+			if (sscanf(optarg, "%u", &baudrate) != 1) {
+				help();
+				return -EINVAL;
+			}
+			break;
+		default:
+			help();
+			return -EINVAL;
+		}
+	}
 
 	ret = greybus_init();
 	if (ret) {
@@ -53,6 +89,14 @@ int main(int argc, char *argv[])
 	if (ret) {
 		pr_err("Failed to init SVC\n");
 		goto err_netlink_exit;
+	}
+
+	if (uart) {
+		ret = register_uart_controller(uart, baudrate);
+		if (ret) {
+			pr_err("Failed to init uart controller\n");
+			goto err_netlink_exit;
+		}
 	}
 
 	controllers_init();

@@ -18,3 +18,7 @@ endif
 if BLUETOOTH
 gbridge_SOURCES += bluetooth.c
 endif
+
+if UART
+gbridge_SOURCES += uart.c
+endif
