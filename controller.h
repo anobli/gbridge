@@ -99,5 +99,6 @@ int connection_destroy(uint8_t intf1_id, uint16_t cport1_id,
 int controller_write(uint16_t cport_id, void *data, size_t len);
 void controllers_init(void);
 void controllers_exit(void);
+void register_controller(struct controller *controller);
 
 #endif				/* __CONTROLLER_H__ */

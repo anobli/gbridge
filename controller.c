@@ -357,7 +357,7 @@ connection_destroy(uint8_t intf1_id, uint16_t cport1_id,
 	return 0;
 }
 
-static void register_controller(struct controller *controller)
+void register_controller(struct controller *controller)
 {
 	TAILQ_INSERT_TAIL(&controllers, controller, node);
 }
