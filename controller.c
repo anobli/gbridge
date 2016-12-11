@@ -92,12 +92,13 @@ int read_gb_msg(int fd, void *data, size_t max_len)
 	return gb_operation_msg_size(data);
 }
 
-static struct connection *cport_id_to_connection(uint16_t cport_id)
+static struct connection *cport_id_to_connection(struct interface *intf,
+						 uint16_t cport2_id)
 {
 	struct connection *conn;
 
 	TAILQ_FOREACH(conn, &connections, node) {
-		if (conn->cport2_id == cport_id)
+		if (conn->intf == intf && conn->cport2_id == cport2_id)
 			return conn;
 	}
 
@@ -134,7 +135,7 @@ static void *interface_recv(void *data)
 
 		pr_dump(buffer, ret);
 
-		conn = cport_id_to_connection(cport_id);
+		conn = cport_id_to_connection(intf, cport_id);
 		if (!conn) {
 			pr_err("Received data on invalid cport number\n");
 			continue;
