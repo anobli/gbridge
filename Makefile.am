@@ -9,6 +9,12 @@ gbridge_SOURCES = main.c \
 		  debug.c \
 		  greybus.c \
 		  svc.c \
-		  controller.c \
-		  bluetooth.c \
-		  tcpip.c
+		  controller.c
+
+if TPCIP
+gbridge_SOURCES += tcpip.c
+endif
+
+if BLUETOOTH
+gbridge_SOURCES += bluetooth.c
+endif

@@ -19,6 +19,7 @@
 #ifndef _GBRIDGE_H_
 #define _GBRIDGE_H_
 
+#include <config.h>
 #include <stdint.h>
 #include <linux/types.h>
 #include <sys/queue.h>

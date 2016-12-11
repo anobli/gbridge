@@ -364,8 +364,12 @@ static void register_controller(struct controller *controller)
 
 static void register_controllers(void)
 {
+#ifdef HAVE_LIBBLUETOOTH
 	register_controller(&bluetooth_controller);
+#endif
+#ifdef HAVE_TCPIP
 	register_controller(&tcpip_controller);
+#endif
 }
 
 static void *controller_loop(void *data)
