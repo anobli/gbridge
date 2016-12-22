@@ -79,6 +79,13 @@ static inline int greybus_empty_callback(struct operation *op)
 		.name = #operation_id,					\
 	}
 
+#define REQUEST_NO_HANDLER(operation_id)				\
+	{								\
+		.id = operation_id,					\
+		.callback = NULL,					\
+		.name = #operation_id,					\
+	}
+
 #define RESPONSE_HANDLER(operation_id, operation_handler)		\
 	{								\
 		.id = OP_RESPONSE | operation_id,			\
