@@ -228,8 +228,8 @@ void interfaces_destroy(struct controller *ctrl)
 int interface_hotplug(struct interface *intf)
 {
 	int ret;
-	ret = svc_send_intf_hotplug_event(intf->id, intf->vendor_id,
-					  intf->product_id, intf->serial_id);
+	ret = svc_send_module_inserted_event(intf->id, intf->vendor_id,
+					     intf->product_id, intf->serial_id);
 
 	return ret;
 }

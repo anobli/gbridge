@@ -166,6 +166,52 @@ static int svc_interface_activate_response(struct operation *op,
 
 	resp = operation_to_response(op);
 	resp->intf_type = intf_type;
+	resp->status = GB_SVC_OP_SUCCESS;
+
+	return 0;
+}
+
+static int svc_interface_resume_response(struct operation *op,
+					   uint8_t intf_type)
+{
+	struct gb_svc_intf_resume_response *resp;
+	size_t op_size = sizeof(*resp);
+
+	if (greybus_alloc_response(op, op_size))
+		return -ENOMEM;
+
+	resp = operation_to_response(op);
+	resp->status = GB_SVC_OP_SUCCESS;
+
+	return 0;
+}
+
+static int svc_interface_set_pwrm_response(struct operation *op,
+					   uint8_t result_code)
+{
+	struct gb_svc_intf_set_pwrm_response *resp;
+	size_t op_size = sizeof(*resp);
+
+	if (greybus_alloc_response(op, op_size))
+		return -ENOMEM;
+
+	resp = operation_to_response(op);
+	resp->result_code = result_code;
+
+	return 0;
+}
+
+static int svc_pwrmon_rail_count_get_response(struct operation *op,
+					      uint8_t rail_count)
+{
+	struct gb_svc_pwrmon_rail_count_get_response *resp;
+	size_t op_size = sizeof(*resp);
+
+	if (greybus_alloc_response(op, op_size))
+		return -ENOMEM;
+
+	resp = operation_to_response(op);
+	resp->rail_count = rail_count;
 
 	return 0;
 }
@@ -259,13 +305,45 @@ static int svc_protocol_version_response(struct operation *op)
        return svc_send_hello_request();
 }
 
+static int svc_interface_resume_request(struct operation *op)
+{
+	return svc_interface_resume_response(op, GB_SVC_INTF_TYPE_GREYBUS);
+}
+
+static int svc_interface_set_pwrm_request(struct operation *op)
+{
+	return svc_interface_set_pwrm_response(op, GB_SVC_SETPWRM_PWR_OK);
+}
+
+static int svc_pwrmon_rail_count_get_request(struct operation *op)
+{
+	return svc_pwrmon_rail_count_get_response(op, 0);
+}
+
 static struct operation_handler svc_operations[] = {
 	REQUEST_EMPTY_HANDLER(GB_SVC_TYPE_INTF_DEVICE_ID),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_INTF_RESET),
 	REQUEST_HANDLER(GB_SVC_TYPE_CONN_CREATE, svc_connection_create_request),
 	REQUEST_HANDLER(GB_SVC_TYPE_CONN_DESTROY, svc_connection_destroy_request),
 	REQUEST_HANDLER(GB_SVC_TYPE_DME_PEER_GET, svc_dme_peer_get_request),
 	REQUEST_HANDLER(GB_SVC_TYPE_DME_PEER_SET, svc_dme_peer_set_request),
+	REQUEST_EMPTY_HANDLER(GB_SVC_TYPE_ROUTE_CREATE),
+	REQUEST_EMPTY_HANDLER(GB_SVC_TYPE_ROUTE_DESTROY),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_TIMESYNC_ENABLE),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_TIMESYNC_DISABLE),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_TIMESYNC_AUTHORITATIVE),
+	REQUEST_HANDLER(GB_SVC_TYPE_INTF_SET_PWRM, svc_interface_set_pwrm_request),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_INTF_EJECT),
 	REQUEST_HANDLER(GB_SVC_TYPE_PING, svc_ping_request),
+	REQUEST_HANDLER(GB_SVC_TYPE_PWRMON_RAIL_COUNT_GET, svc_pwrmon_rail_count_get_request),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_PWRMON_RAIL_NAMES_GET),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_PWRMON_SAMPLE_GET),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_PWRMON_INTF_SAMPLE_GET),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_TIMESYNC_WAKE_PINS_ACQUIRE),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_TIMESYNC_WAKE_PINS_RELEASE),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_TIMESYNC_PING),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_MODULE_INSERTED),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_MODULE_REMOVED),
 	REQUEST_HANDLER(GB_SVC_TYPE_INTF_VSYS_ENABLE, svc_interface_v_sys_enable_request),
 	REQUEST_HANDLER(GB_SVC_TYPE_INTF_VSYS_DISABLE, svc_interface_v_sys_disable_request),
 	REQUEST_HANDLER(GB_SVC_TYPE_INTF_REFCLK_ENABLE, svc_interface_refclk_enable_request),
@@ -273,6 +351,9 @@ static struct operation_handler svc_operations[] = {
 	REQUEST_HANDLER(GB_SVC_TYPE_INTF_UNIPRO_ENABLE, svc_interface_unipro_enable_request),
 	REQUEST_HANDLER(GB_SVC_TYPE_INTF_UNIPRO_DISABLE, svc_interface_unipro_disable_request),
 	REQUEST_HANDLER(GB_SVC_TYPE_INTF_ACTIVATE, svc_interface_activate_request),
+	REQUEST_HANDLER(GB_SVC_TYPE_INTF_RESUME, svc_interface_resume_request),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_INTF_MAILBOX_EVENT),
+	REQUEST_NO_HANDLER(GB_SVC_TYPE_INTF_OOPS),
 	RESPONSE_HANDLER(GB_SVC_TYPE_PROTOCOL_VERSION, svc_protocol_version_response),
 	RESPONSE_EMPTY_HANDLER(GB_SVC_TYPE_SVC_HELLO),
 	RESPONSE_EMPTY_HANDLER(GB_SVC_TYPE_MODULE_INSERTED),
@@ -288,16 +369,15 @@ int svc_register_driver(void) {
 	return greybus_register_driver(0, &svc_driver);
 }
 
-
 int svc_send_protocol_version_request(void)
 {
-	struct gb_protocol_version_request req;
+	struct gb_svc_version_request req;
 	struct operation *op;
 
 	req.major = GB_SVC_VERSION_MAJOR;
 	req.minor = GB_SVC_VERSION_MINOR;
 
-	op = greybus_alloc_operation(GB_REQUEST_TYPE_PROTOCOL_VERSION,
+	op = greybus_alloc_operation(GB_SVC_TYPE_PROTOCOL_VERSION,
 				     &req, sizeof(req));
 	if (!op)
 		return -ENOMEM;
@@ -320,23 +400,17 @@ int svc_send_hello_request(void)
 	return greybus_send_request(0, op);
 }
 
-int svc_send_intf_hotplug_event(uint8_t intf_id,
-				uint32_t vendor_id,
-				uint32_t product_id, uint64_t serial_number)
+int svc_send_module_inserted_event(uint8_t intf_id,
+				   uint32_t vendor_id,
+				   uint32_t product_id, uint64_t serial_number)
 {
-	struct gb_svc_intf_hotplug_request req;
+	struct gb_svc_module_inserted_request req;
 	struct operation *op;
 
-	req.intf_id = intf_id;
-	req.data.ara_vend_id = htole32(vendor_id);
-	req.data.ara_prod_id = htole32(product_id);
-	req.data.serial_number = htole64(serial_number);
+	req.primary_intf_id = intf_id;
+	req.intf_count = 1;
 
-	//FIXME: Use some real version numbers here ?
-	req.data.ddbl1_mfr_id = htole32(1);
-	req.data.ddbl1_prod_id = htole32(1);
-
-	op = greybus_alloc_operation(GB_SVC_TYPE_INTF_HOTPLUG,
+	op = greybus_alloc_operation(GB_SVC_TYPE_MODULE_INSERTED,
 				     &req, sizeof(req));
 	if (!op)
 		return -ENOMEM;

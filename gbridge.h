@@ -113,18 +113,18 @@ static inline int greybus_empty_callback(struct operation *op)
 
 int svc_init(void);
 int svc_register_driver();
-int svc_send_intf_hotplug_event(uint8_t intf_id,
-				uint32_t vendor_id,
-				uint32_t product_id, uint64_t serial_number);
+int svc_send_module_inserted_event(uint8_t intf_id,
+				   uint32_t vendor_id,
+				   uint32_t product_id, uint64_t serial_number);
 void svc_watchdog_disable(void);
 
 int greybus_init(void);
 struct operation *greybus_alloc_operation(uint8_t type,
 					  void *payload, size_t len);
 int greybus_alloc_response(struct operation *op, size_t size);
-int greybus_send_request(uint16_t cport_id, struct operation *op);
 int greybus_register_driver(uint16_t cport_id,
 			    struct greybus_driver *driver);
 int greybus_handler(uint16_t cport_id, struct gb_operation_msg_hdr *hdr);
+int greybus_send_request(uint16_t cport_id, struct operation *op);
 
 #endif /* _GBRIDGE_H_ */
