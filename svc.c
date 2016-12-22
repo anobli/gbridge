@@ -175,11 +175,6 @@ static int svc_ping_request(struct operation *op)
 	return 0;
 }
 
-static int svc_interface_device_id_request(struct operation *op)
-{
-	return 0;
-}
-
 static int svc_connection_create_request(struct operation *op)
 {
 	struct gb_svc_conn_create_request *req;
@@ -259,72 +254,40 @@ static int svc_interface_activate_request(struct operation *op)
 	return svc_interface_activate_response(op, GB_SVC_INTF_TYPE_GREYBUS);
 }
 
-static int svc_interface_hotplug_request(struct operation *op)
+static int svc_protocol_version_response(struct operation *op)
 {
-	return -ENOSYS;
+       return svc_send_hello_request();
 }
 
-static int svc_interface_hot_unplug_request(struct operation *op)
-{
-	return -ENOSYS;
+static struct operation_handler svc_operations[] = {
+	REQUEST_EMPTY_HANDLER(GB_SVC_TYPE_INTF_DEVICE_ID),
+	REQUEST_HANDLER(GB_SVC_TYPE_CONN_CREATE, svc_connection_create_request),
+	REQUEST_HANDLER(GB_SVC_TYPE_CONN_DESTROY, svc_connection_destroy_request),
+	REQUEST_HANDLER(GB_SVC_TYPE_DME_PEER_GET, svc_dme_peer_get_request),
+	REQUEST_HANDLER(GB_SVC_TYPE_DME_PEER_SET, svc_dme_peer_set_request),
+	REQUEST_HANDLER(GB_SVC_TYPE_PING, svc_ping_request),
+	REQUEST_HANDLER(GB_SVC_TYPE_INTF_VSYS_ENABLE, svc_interface_v_sys_enable_request),
+	REQUEST_HANDLER(GB_SVC_TYPE_INTF_VSYS_DISABLE, svc_interface_v_sys_disable_request),
+	REQUEST_HANDLER(GB_SVC_TYPE_INTF_REFCLK_ENABLE, svc_interface_refclk_enable_request),
+	REQUEST_HANDLER(GB_SVC_TYPE_INTF_REFCLK_DISABLE, svc_interface_refclk_disable_request),
+	REQUEST_HANDLER(GB_SVC_TYPE_INTF_UNIPRO_ENABLE, svc_interface_unipro_enable_request),
+	REQUEST_HANDLER(GB_SVC_TYPE_INTF_UNIPRO_DISABLE, svc_interface_unipro_disable_request),
+	REQUEST_HANDLER(GB_SVC_TYPE_INTF_ACTIVATE, svc_interface_activate_request),
+	RESPONSE_HANDLER(GB_SVC_TYPE_PROTOCOL_VERSION, svc_protocol_version_response),
+	RESPONSE_EMPTY_HANDLER(GB_SVC_TYPE_SVC_HELLO),
+	RESPONSE_EMPTY_HANDLER(GB_SVC_TYPE_MODULE_INSERTED),
+};
+
+static struct greybus_driver svc_driver = {
+	.name = "svc",
+	.operations = svc_operations,
+	.count = OPERATION_COUNT(svc_operations),
+};
+
+int svc_register_driver(void) {
+	return greybus_register_driver(0, &svc_driver);
 }
 
-static int svc_handler_response(struct operation *op)
-{
-	switch (op->resp->type & ~OP_RESPONSE) {
-	case GB_REQUEST_TYPE_PROTOCOL_VERSION:
-		return svc_send_hello_request();
-	case GB_SVC_TYPE_SVC_HELLO:
-	case GB_SVC_TYPE_INTF_HOTPLUG:
-		return 0;
-	}
-
-	return -EINVAL;
-}
-
-int svc_handler(struct operation *op)
-{
-	if (op->resp)
-		return svc_handler_response(op);
-
-	switch (op->req->type) {
-	case GB_SVC_TYPE_PING:
-		return svc_ping_request(op);
-	case GB_SVC_TYPE_INTF_DEVICE_ID:
-		return svc_interface_device_id_request(op);
-	case GB_SVC_TYPE_CONN_CREATE:
-		return svc_connection_create_request(op);
-	case GB_SVC_TYPE_CONN_DESTROY:
-		return svc_connection_destroy_request(op);
-	case GB_SVC_TYPE_DME_PEER_GET:
-		return svc_dme_peer_get_request(op);
-	case GB_SVC_TYPE_DME_PEER_SET:
-		return svc_dme_peer_set_request(op);
-	case GB_SVC_TYPE_ROUTE_CREATE:
-	case GB_SVC_TYPE_ROUTE_DESTROY:
-		return 0;
-	case GB_SVC_TYPE_INTF_HOTPLUG:
-		return svc_interface_hotplug_request(op);
-	case GB_SVC_TYPE_INTF_HOT_UNPLUG:
-		return svc_interface_hot_unplug_request(op);
-	case GB_SVC_TYPE_INTF_VSYS_ENABLE:
-		return svc_interface_v_sys_enable_request(op);
-	case GB_SVC_TYPE_INTF_VSYS_DISABLE:
-		return svc_interface_v_sys_disable_request(op);
-	case GB_SVC_TYPE_INTF_REFCLK_ENABLE:
-		return svc_interface_refclk_enable_request(op);
-	case GB_SVC_TYPE_INTF_REFCLK_DISABLE:
-		return svc_interface_refclk_disable_request(op);
-	case GB_SVC_TYPE_INTF_UNIPRO_ENABLE:
-		return svc_interface_unipro_enable_request(op);
-	case GB_SVC_TYPE_INTF_UNIPRO_DISABLE:
-		return svc_interface_unipro_disable_request(op);
-	case GB_SVC_TYPE_INTF_ACTIVATE:
-		return svc_interface_activate_request(op);
-	}
-
-	return -EINVAL;
-}
 
 int svc_send_protocol_version_request(void)
 {

@@ -47,7 +47,53 @@ struct operation {
 	 TAILQ_ENTRY(operation) cnode;
 };
 
-typedef int (*greybus_handler_t) (struct operation *);
+typedef int operation_handler_t(struct operation *op);
+struct operation_handler {
+	uint8_t id;
+	operation_handler_t *callback;
+	const char *name;
+};
+
+struct greybus_driver {
+	const char *name;
+	struct operation_handler *operations;
+	uint8_t count;
+};
+
+static inline int greybus_empty_callback(struct operation *op)
+{
+	return 0;
+}
+
+#define REQUEST_HANDLER(operation_id, operation_handler)		\
+	{								\
+		.id = operation_id,					\
+		.callback = operation_handler,				\
+		.name = #operation_id,					\
+	}
+
+#define REQUEST_EMPTY_HANDLER(operation_id)				\
+	{								\
+		.id = operation_id,					\
+		.callback = greybus_empty_callback,			\
+		.name = #operation_id,					\
+	}
+
+#define RESPONSE_HANDLER(operation_id, operation_handler)		\
+	{								\
+		.id = OP_RESPONSE | operation_id,			\
+		.callback = operation_handler,				\
+		.name = #operation_id,					\
+	}
+
+#define RESPONSE_EMPTY_HANDLER(operation_id)				\
+	{								\
+		.id = OP_RESPONSE | operation_id,			\
+		.callback = greybus_empty_callback,			\
+		.name = #operation_id,					\
+	}
+
+#define OPERATION_COUNT(operations) (sizeof(operations)/sizeof(operations[0]))
 
 #define operation_to_request(op)	\
 	(void *)((op)->req + 1)
@@ -59,7 +105,7 @@ typedef int (*greybus_handler_t) (struct operation *);
 	le16toh(((struct gb_operation_msg_hdr *)(hdr))->size)
 
 int svc_init(void);
-int svc_handler(struct operation *op);
+int svc_register_driver();
 int svc_send_intf_hotplug_event(uint8_t intf_id,
 				uint32_t vendor_id,
 				uint32_t product_id, uint64_t serial_number);
@@ -70,6 +116,8 @@ struct operation *greybus_alloc_operation(uint8_t type,
 					  void *payload, size_t len);
 int greybus_alloc_response(struct operation *op, size_t size);
 int greybus_send_request(uint16_t cport_id, struct operation *op);
+int greybus_register_driver(uint16_t cport_id,
+			    struct greybus_driver *driver);
 int greybus_handler(uint16_t cport_id, struct gb_operation_msg_hdr *hdr);
 
 #endif /* _GBRIDGE_H_ */
