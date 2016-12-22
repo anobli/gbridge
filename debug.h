@@ -22,6 +22,10 @@
 #include <stdio.h>
 #include <stdint.h>
 
+#define COLOR_RED	"\x1b[31m"
+#define COLOR_YELLOW	"\x1b[33m"
+#define COLOR_RESET	"\x1b[0m"
+
 enum log_level {
 	LL_ERROR = 0,
 	LL_WARNING,
@@ -39,10 +43,10 @@ enum log_level {
 	} while (0)
 
 #define pr_err(format, ...) \
-	ll_print(LL_ERROR, format, ##__VA_ARGS__)
+	ll_print(LL_ERROR, COLOR_RED format COLOR_RESET, ##__VA_ARGS__)
 
 #define pr_warn(format, ...) \
-	ll_print(LL_WARNING, format, ##__VA_ARGS__)
+	ll_print(LL_WARNING, COLOR_YELLOW format COLOR_RESET, ##__VA_ARGS__)
 
 #define pr_info(format, ...) \
 	ll_print(LL_INFO, format, ##__VA_ARGS__)
