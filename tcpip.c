@@ -87,6 +87,17 @@ static int tcpip_connection_create(struct connection *conn)
 	return 0;
 }
 
+static int tcpip_connection_destroy(struct connection *conn)
+{
+	struct tcpip_connection *tconn = conn->priv;
+
+	conn->priv = NULL;
+	close(tconn->sock);
+	free(tconn);
+
+	return 0;
+}
+
 static void tcpip_hotplug(struct controller *ctrl, const char *host_name,
 			  const AvahiAddress *address, uint16_t port)
 {
@@ -310,6 +321,7 @@ struct controller tcpip_controller = {
 	.init = tcpip_init,
 	.exit = tcpip_exit,
 	.connection_create = tcpip_connection_create,
+	.connection_destroy = tcpip_connection_destroy,
 	.event_loop = avahi_discovery,
 	.event_loop_stop = avahi_discovery_stop,
 	.write = tcpip_write,
