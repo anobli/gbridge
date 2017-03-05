@@ -19,7 +19,7 @@
 #include <debug.h>
 #include <gbridge.h>
 #include <controller.h>
-#include <uart.h>
+#include <controllers/uart.h>
 
 #include <errno.h>
 #include <string.h>

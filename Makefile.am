@@ -12,13 +12,13 @@ gbridge_SOURCES = main.c \
 		  controller.c
 
 if TPCIP
-gbridge_SOURCES += tcpip.c
+gbridge_SOURCES += controllers/tcpip.c
 endif
 
 if BLUETOOTH
-gbridge_SOURCES += bluetooth.c
+gbridge_SOURCES += controllers/bluetooth.c
 endif
 
 if UART
-gbridge_SOURCES += uart.c
+gbridge_SOURCES += controllers/uart.c
 endif

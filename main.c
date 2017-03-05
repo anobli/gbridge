@@ -25,7 +25,7 @@
 
 #include "gbridge.h"
 #include "netlink.h"
-#include "uart.h"
+#include "controllers/uart.h"
 
 static void help(void)
 {
