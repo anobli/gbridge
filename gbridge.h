@@ -21,6 +21,7 @@
 
 #include <config.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include <linux/types.h>
 #include <sys/queue.h>
 
