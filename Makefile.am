@@ -8,8 +8,8 @@ gbridge_SOURCES = main.c \
 		  netlink.c \
 		  debug.c \
 		  greybus.c \
-		  svc.c \
-		  controller.c
+		  controller.c \
+		  protocols/svc.c
 
 if TPCIP
 gbridge_SOURCES += controllers/tcpip.c
