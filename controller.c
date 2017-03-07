@@ -117,6 +117,28 @@ static struct connection *hd_cport_id_to_connection(uint16_t cport_id)
 	return NULL;
 }
 
+int hd_to_intf_cport_id(uint16_t hd_cport_id,
+			uint8_t *intf_id, uint16_t *cport_id)
+{
+	struct connection *conn;
+
+	if (hd_cport_id == SVC_CPORT) {
+		*intf_id = 0;
+		*cport_id = 0;
+		return 0;
+	}
+
+	TAILQ_FOREACH(conn, &connections, node) {
+		if (conn->cport1_id == hd_cport_id) {
+			*intf_id = conn->intf2->id;
+			*cport_id = conn->cport2_id;
+			return 0;
+		}
+	}
+
+	return -EINVAL;
+}
+
 static void *interface_recv(void *data)
 {
 	int ret;
