@@ -31,7 +31,6 @@
 
 /* TODO: Can we use other IDs ? */
 #define ENDO_ID 0x4755
-#define AP_INTF_ID 0x0
 
 static int svc_send_hello_request(void);
 
@@ -366,7 +365,7 @@ static struct greybus_driver svc_driver = {
 };
 
 int svc_register_driver(void) {
-	return greybus_register_driver(0, &svc_driver);
+	return greybus_register_driver(AP_INTF_ID, SVC_CPORT, &svc_driver);
 }
 
 int svc_send_protocol_version_request(void)
@@ -382,7 +381,7 @@ int svc_send_protocol_version_request(void)
 	if (!op)
 		return -ENOMEM;
 
-	return greybus_send_request(0, op);
+	return greybus_send_request(AP_INTF_ID, SVC_CPORT, op);
 }
 
 int svc_send_hello_request(void)
@@ -397,7 +396,7 @@ int svc_send_hello_request(void)
 	if (!op)
 		return -ENOMEM;
 
-	return greybus_send_request(0, op);
+	return greybus_send_request(AP_INTF_ID, SVC_CPORT, op);
 }
 
 int svc_send_module_inserted_event(uint8_t intf_id,
@@ -415,7 +414,7 @@ int svc_send_module_inserted_event(uint8_t intf_id,
 	if (!op)
 		return -ENOMEM;
 
-	return greybus_send_request(0, op);
+	return greybus_send_request(AP_INTF_ID, SVC_CPORT, op);
 }
 
 int svc_init(void)

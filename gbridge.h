@@ -32,6 +32,7 @@
 #include <gb_netlink.h>
 
 #define SVC_CPORT		0
+#define AP_INTF_ID		0
 #define OP_RESPONSE		0x80
 
 #ifndef TAILQ_FOREACH_SAFE
@@ -123,9 +124,11 @@ int greybus_init(void);
 struct operation *greybus_alloc_operation(uint8_t type,
 					  void *payload, size_t len);
 int greybus_alloc_response(struct operation *op, size_t size);
-int greybus_register_driver(uint16_t cport_id,
+int greybus_register_driver(uint8_t intf_id, uint16_t cport_id,
 			    struct greybus_driver *driver);
-int greybus_handler(uint16_t cport_id, struct gb_operation_msg_hdr *hdr);
-int greybus_send_request(uint16_t cport_id, struct operation *op);
+int greybus_handler(uint8_t intf_id, uint16_t cport_id,
+		    struct gb_operation_msg_hdr *hdr);
+int greybus_send_request(uint8_t intf_id, uint16_t cport_id,
+			 struct operation *op);
 
 #endif /* _GBRIDGE_H_ */

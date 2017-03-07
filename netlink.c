@@ -40,6 +40,8 @@ parse_gb_nl_msg(struct nl_cache_ops *unused, struct genl_cmd *cmd,
 {
 	struct gb_operation_msg_hdr *hdr;
 	uint16_t hd_cport_id;
+	uint16_t cport_id;
+	uint8_t intf_id;
 	size_t len;
 	int ret;
 
@@ -56,7 +58,8 @@ parse_gb_nl_msg(struct nl_cache_ops *unused, struct genl_cmd *cmd,
 	}
 
 	if (hd_cport_id == SVC_CPORT) {
-		ret = greybus_handler(hd_cport_id, hdr);
+		hd_to_intf_cport_id(hd_cport_id, &intf_id, &cport_id);
+		ret = greybus_handler(intf_id, cport_id, hdr);
 		if (ret) {
 			pr_err("Failed to handle svc operation %d: %d\n",
 			       hdr->type, ret);

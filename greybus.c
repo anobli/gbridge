@@ -26,9 +26,9 @@
 
 #include "gbridge.h"
 #include "netlink.h"
+#include "controller.h"
 
-static struct greybus_driver *gb_drivers[GB_NETLINK_NUM_CPORT];
-static TAILQ_HEAD(head, operation) operations;
+static TAILQ_HEAD(operation_head, operation) operations;
 
 enum gb_operation_result {
 	GB_OP_SUCCESS		= 0x00,
@@ -157,7 +157,8 @@ static void greybus_free_operation(struct operation *op)
 	free(op);
 }
 
-int greybus_send_request(uint16_t cport_id, struct operation *op)
+int greybus_send_request(uint8_t intf_id, uint16_t cport_id,
+			 struct operation *op)
 {
 	int len;
 	int ret;
@@ -174,7 +175,8 @@ int greybus_send_request(uint16_t cport_id, struct operation *op)
 	return 0;
 }
 
-static int greybus_send_response(uint16_t cport_id, struct operation *op)
+static int greybus_send_response(uint8_t intf_id, uint16_t cport_id,
+				 struct operation *op)
 {
 	int len;
 	int ret;
@@ -238,14 +240,22 @@ int _greybus_handler(struct greybus_driver *driver, struct operation *op)
 	return handler->callback(op);
 }
 
-int greybus_handler(uint16_t cport_id, struct gb_operation_msg_hdr *hdr)
+int greybus_handler(uint8_t intf2_id, uint16_t cport_id,
+		    struct gb_operation_msg_hdr *hdr)
 {
 	int ret;
 	struct operation *op;
+	struct interface *intf2;
 
 	pr_dump(hdr, gb_operation_msg_size(hdr));
 
-	if (!gb_drivers[cport_id]) {
+	intf2 = get_interface(intf2_id);
+	if (!intf2) {
+		pr_err("Invalid interface id %d\n", intf2_id);
+		return -EINVAL;
+	}
+
+	if (!intf2->gb_drivers[cport_id]) {
 		pr_err("No driver registered for cport %d\n", cport_id);
 		return -EINVAL;
 	}
@@ -260,13 +270,13 @@ int greybus_handler(uint16_t cport_id, struct gb_operation_msg_hdr *hdr)
 		TAILQ_REMOVE(&operations, op, cnode);
 		if (_greybus_alloc_response(op, hdr))
 			return -ENOMEM;
-		ret = _greybus_handler(gb_drivers[cport_id], op);
+		ret = _greybus_handler(intf2->gb_drivers[cport_id], op);
 	} else {
 		op = _greybus_alloc_operation(hdr);
 		if (!op)
 			return -ENOMEM;
 
-		ret = _greybus_handler(gb_drivers[cport_id], op);
+		ret = _greybus_handler(intf2->gb_drivers[cport_id], op);
 		if (!op->resp) {
 			if (greybus_alloc_response(op, 0)) {
 				pr_err("Failed to alloc greybus response\n");
@@ -276,7 +286,7 @@ int greybus_handler(uint16_t cport_id, struct gb_operation_msg_hdr *hdr)
 		}
 		op->resp->result = greybus_errno_to_result(ret);
 
-		ret = greybus_send_response(cport_id, op);
+		ret = greybus_send_response(intf2_id, cport_id, op);
 	}
 
  free_op:
@@ -285,19 +295,26 @@ int greybus_handler(uint16_t cport_id, struct gb_operation_msg_hdr *hdr)
 	return ret;
 }
 
-int greybus_register_driver(uint16_t cport_id,
+int greybus_register_driver(uint8_t intf_id, uint16_t cport_id,
 			    struct greybus_driver *driver)
 {
 	int i = 0;
 	int id = 0;
 	int id_min = -1;
+	struct interface *intf;
+
+	intf = get_interface(intf_id);
+	if (!intf) {
+		pr_err("Invalid interface id %d\n", intf_id);
+		return -EINVAL;
+	}
 
 	if (cport_id >= GB_NETLINK_NUM_CPORT) {
 		pr_err("Invalid cport id %d\n", cport_id);
 		return -EINVAL;
 	}
 
-	if (gb_drivers[cport_id]) {
+	if (intf->gb_drivers[cport_id]) {
 		pr_err("A driver has already been registered for cport id %d\n",
 			cport_id);
 		return -EINVAL;
@@ -318,7 +335,7 @@ int greybus_register_driver(uint16_t cport_id,
 		id++;
 	}
 
-	gb_drivers[cport_id] = driver;
+	intf->gb_drivers[cport_id] = driver;
 
 	return 0;
 }
@@ -326,8 +343,6 @@ int greybus_register_driver(uint16_t cport_id,
 int greybus_init(void)
 {
 	TAILQ_INIT(&operations);
-	memset(gb_drivers, 0,
-	       sizeof(struct operation_handler *) * GB_NETLINK_NUM_CPORT);
 
-	return svc_register_driver();
+	return 0;
 }
