@@ -53,6 +53,16 @@ AC_ARG_ENABLE([uart],
 esac])
 AM_CONDITIONAL([UART], [test x$uart = xtrue])
 
+AC_ARG_ENABLE([netlink],
+[  --enable-netlink    Enable Netlink],
+[case "${enableval}" in
+	yes) netlink=true ;
+	     AC_DEFINE([NETLINK], [1], ["Netlink support"]) ;;
+	no)  netlink=false ;;
+	*) AC_MSG_ERROR([bad value ${enableval} for --enable-netlink]) ;;
+esac])
+AM_CONDITIONAL([NETLINK], [test x$netlink = xtrue])
+
 AC_ARG_VAR([GBDIR], ["greybus sources directory"])
 AS_IF([test "$GBDIR" = ""], [
   AC_MSG_ERROR([Environment variable GBDIR needs to be set])

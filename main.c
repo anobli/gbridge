@@ -24,8 +24,9 @@
 #include <controller.h>
 
 #include "gbridge.h"
-#include "netlink.h"
 #include "controllers/uart.h"
+
+int run;
 
 static void help(void)
 {
@@ -41,7 +42,7 @@ static void help(void)
 
 static void signal_handler(int sig)
 {
-	netlink_cancel();
+	run = 0;
 }
 
 int main(int argc, char *argv[])
@@ -79,40 +80,17 @@ int main(int argc, char *argv[])
 		return ret;
 	}
 
-	ret = netlink_init();
-	if (ret) {
-		pr_err("Failed to init netlink\n");
-		return ret;
-	}
-
-	ret = svc_init();
-	if (ret) {
-		pr_err("Failed to init SVC\n");
-		goto err_netlink_exit;
-	}
-
 	if (uart) {
 		ret = register_uart_controller(uart, baudrate);
-		if (ret) {
-			pr_err("Failed to init uart controller\n");
-			goto err_netlink_exit;
-		}
+		if (ret)
+			return ret;
 	}
 
+	run = 1;
 	controllers_init();
-
-	netlink_loop();
-
+	while(run)
+		sleep(1);
 	controllers_exit();
 
-	netlink_exit();
-
 	return 0;
-
- err_netlink_exit:
-	netlink_cancel();
-	netlink_loop();
-	netlink_exit();
-
-	return ret;
 }

@@ -25,7 +25,6 @@
 #include <gb_netlink.h>
 
 #include "gbridge.h"
-#include "netlink.h"
 #include "controller.h"
 
 static TAILQ_HEAD(operation_head, operation) operations;
@@ -168,7 +167,7 @@ int greybus_send_request(uint8_t intf_id, uint16_t cport_id,
 
 	op->cport_id = cport_id;
 	TAILQ_INSERT_TAIL(&operations, op, cnode);
-	ret = netlink_send(cport_id, op->req, len);
+	ret = controller_write(intf_id, cport_id, op->req, len);
 	if (ret < 0)
 		return ret;
 
@@ -184,7 +183,7 @@ static int greybus_send_response(uint8_t intf_id, uint16_t cport_id,
 	len = gb_operation_msg_size(op->resp);
 	pr_dump(op->resp, len);
 
-	ret = netlink_send(cport_id, op->resp, len);
+	ret = controller_write(intf_id, cport_id, op->resp, len);
 	if (ret < 0)
 		return ret;
 

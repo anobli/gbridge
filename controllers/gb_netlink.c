@@ -91,7 +91,7 @@ static struct genl_ops ops = {
 	.o_ncmds = ARRAY_SIZE(cmds),
 };
 
-int netlink_send(uint16_t hd_cport_id, void *data, size_t len)
+int netlink_write(struct connection *conn, void *data, size_t len)
 {
 	struct nl_data *nl_data;
 	struct nl_msg *msg;
@@ -120,7 +120,7 @@ int netlink_send(uint16_t hd_cport_id, void *data, size_t len)
 		goto err_msg_free;
 	}
 
-	nla_put_u32(msg, GB_NL_A_CPORT, hd_cport_id);
+	nla_put_u32(msg, GB_NL_A_CPORT, conn->cport1_id);
 	nla_put_data(msg, GB_NL_A_DATA, nl_data);
 	ret = nl_send_auto(sock, msg);
 	if (ret < 0)
@@ -172,6 +172,27 @@ static int netlink_hd_reset(void)
 void *nl_recv_cb(void *data)
 {
 	int ret;
+	struct controller *ctrl = data;
+
+	if (!interface_create(ctrl, 0, 0, 0, NULL)) {
+		pr_err("Failed to create AP interface\n");
+		return NULL;
+	}
+
+	ret = svc_register_driver();
+	if (ret) {
+		pr_err("Failed to register SVC\n");
+		return NULL;
+	}
+
+	/* HACK: create a connection for SVC */
+	connection_create(0, 0, 0, 0);
+
+	ret = svc_init();
+	if (ret) {
+		pr_err("Failed to init SVC\n");
+		return NULL;
+	}
 
 	while (1) {
 		ret = nl_recvmsgs_default(sock);
@@ -189,7 +210,7 @@ int events_cb(struct nl_msg *msg, void *arg)
 	return genl_handle_msg(msg, arg);
 }
 
-int netlink_init(void)
+int netlink_init(struct controller * ctrl)
 {
 	int ret;
 
@@ -212,7 +233,7 @@ int netlink_init(void)
 		goto error;
 	}
 
-	return pthread_create(&nl_recv_thread, NULL, nl_recv_cb, NULL);
+	return pthread_create(&nl_recv_thread, NULL, nl_recv_cb, ctrl);
 
  error:
 	nl_close(sock);
@@ -221,20 +242,28 @@ int netlink_init(void)
 	return ret;
 }
 
-void netlink_loop(void)
+int netlink_interface_create(struct interface *intf)
 {
-	pthread_join(nl_recv_thread, NULL);
+	intf->id = 0;
+
+	return 0;
 }
 
-void netlink_cancel(void)
+void netlink_exit(struct controller * ctrl)
 {
 	svc_watchdog_disable();
 	pthread_cancel(nl_recv_thread);
-}
+	pthread_join(nl_recv_thread, NULL);
 
-void netlink_exit(void)
-{
 	netlink_hd_reset();
 	nl_close(sock);
 	nl_socket_free(sock);
 }
+
+struct controller netlink_controller = {
+	.name = "netlink",
+	.init = netlink_init,
+	.exit = netlink_exit,
+	.write = netlink_write,
+	.interface_create = netlink_interface_create,
+};

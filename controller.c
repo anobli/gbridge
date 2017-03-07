@@ -22,7 +22,6 @@
 
 #include <debug.h>
 #include <gbridge.h>
-#include <netlink.h>
 #include <controller.h>
 
 static
@@ -164,7 +163,7 @@ static void *interface_recv(void *data)
 			continue;
 		}
 
-		ret = netlink_send(conn->cport1_id, buffer, ret);
+		ret = controller_write(AP_INTF_ID, conn->cport1_id, buffer, ret);
 		if (ret < 0) {
 			pr_err("Failed to transmit data\n");
 		}
@@ -299,7 +298,8 @@ void *connection_recv(void *data)
 
 		pr_dump(buffer, ret);
 
-		ret = netlink_send(conn->cport1_id, buffer, ret);
+		ret = controller_write(conn->intf1->id, conn->cport1_id,
+				       buffer, ret);
 		if (ret < 0) {
 			pr_err("Failed to transmit data\n");
 		}
@@ -391,6 +391,9 @@ void register_controller(struct controller *controller)
 
 static void register_controllers(void)
 {
+#ifdef NETLINK
+	register_controller(&netlink_controller);
+#endif
 #ifdef HAVE_LIBBLUETOOTH
 	register_controller(&bluetooth_controller);
 #endif
