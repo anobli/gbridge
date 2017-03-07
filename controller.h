@@ -27,7 +27,8 @@
 struct connection {
 	uint16_t cport1_id;
 	uint16_t cport2_id;
-	struct interface *intf;
+	struct interface *intf1;
+	struct interface *intf2;
 
 	void *priv;
 

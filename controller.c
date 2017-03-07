@@ -98,7 +98,7 @@ static struct connection *cport_id_to_connection(struct interface *intf,
 	struct connection *conn;
 
 	TAILQ_FOREACH(conn, &connections, node) {
-		if (conn->intf == intf && conn->cport2_id == cport2_id)
+		if (conn->intf2 == intf && conn->cport2_id == cport2_id)
 			return conn;
 	}
 
@@ -258,8 +258,8 @@ void *connection_recv(void *data)
 {
 	int ret;
 	struct connection *conn = data;
-	struct interface *intf = conn->intf;
-	struct controller *ctrl = intf->ctrl;
+	struct interface *intf2 = conn->intf2;
+	struct controller *ctrl = intf2->ctrl;
 	uint8_t buffer[GB_NETLINK_MTU];
 
 	while (1) {
@@ -290,23 +290,29 @@ connection_create(uint8_t intf1_id, uint16_t cport1_id,
 		  uint8_t intf2_id, uint16_t cport2_id)
 {
 	int ret;
-	struct interface *intf;
+	struct interface *intf1;
+	struct interface *intf2;
 	struct connection *conn;
 	struct controller *ctrl;
 
-	intf = get_interface(intf2_id);
-	if (!intf)
+	intf1 = get_interface(intf1_id);
+	if (!intf1)
+		return -EINVAL;
+
+	intf2 = get_interface(intf2_id);
+	if (!intf2)
 		return -EINVAL;
 
 	conn = malloc(sizeof(*conn));
 	if (!conn)
 		return -ENOMEM;
 
-	conn->intf = intf;
+	conn->intf1 = intf1;
+	conn->intf2 = intf2;
 	conn->cport1_id = cport1_id;
 	conn->cport2_id = cport2_id;
 
-	ctrl = intf->ctrl;
+	ctrl = intf2->ctrl;
 	if (ctrl->connection_create) {
 		ret = ctrl->connection_create(conn);
 		if (ret)
@@ -413,7 +419,7 @@ int controller_write(uint16_t cport_id, void *data, size_t len)
 
 	pr_dump(data, len);
 
-	ctrl = conn->intf->ctrl;
+	ctrl = conn->intf2->ctrl;
 	return ctrl->write(conn, data, len);
 }
 
