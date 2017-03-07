@@ -239,7 +239,7 @@ int interface_hot_unplug(struct interface *intf)
 	return 0;
 }
 
-static struct interface *get_interface(uint8_t intf_id)
+struct interface *get_interface(uint8_t intf_id)
 {
 	struct controller *ctrl;
 	struct interface *intf;

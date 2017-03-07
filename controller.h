@@ -101,4 +101,6 @@ void controllers_init(void);
 void controllers_exit(void);
 void register_controller(struct controller *controller);
 
+struct interface *get_interface(uint8_t intf_id);
+
 #endif				/* __CONTROLLER_H__ */
