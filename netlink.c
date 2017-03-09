@@ -57,8 +57,8 @@ parse_gb_nl_msg(struct nl_cache_ops *unused, struct genl_cmd *cmd,
 		return -EPROTO;
 	}
 
+	hd_to_intf_cport_id(hd_cport_id, &intf_id, &cport_id);
 	if (hd_cport_id == SVC_CPORT) {
-		hd_to_intf_cport_id(hd_cport_id, &intf_id, &cport_id);
 		ret = greybus_handler(intf_id, cport_id, hdr);
 		if (ret) {
 			pr_err("Failed to handle svc operation %d: %d\n",
@@ -66,8 +66,8 @@ parse_gb_nl_msg(struct nl_cache_ops *unused, struct genl_cmd *cmd,
 		}
 	} else {
 		ret =
-		    controller_write(hd_cport_id, hdr,
-				     gb_operation_msg_size(hdr));
+		    controller_write(intf_id, cport_id,
+				     hdr, gb_operation_msg_size(hdr));
 	}
 
 	return 0;

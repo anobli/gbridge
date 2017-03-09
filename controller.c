@@ -92,31 +92,6 @@ int read_gb_msg(int fd, void *data, size_t max_len)
 	return gb_operation_msg_size(data);
 }
 
-static struct connection *cport_id_to_connection(struct interface *intf,
-						 uint16_t cport2_id)
-{
-	struct connection *conn;
-
-	TAILQ_FOREACH(conn, &connections, node) {
-		if (conn->intf2 == intf && conn->cport2_id == cport2_id)
-			return conn;
-	}
-
-	return NULL;
-}
-
-static struct connection *hd_cport_id_to_connection(uint16_t cport_id)
-{
-	struct connection *conn;
-
-	TAILQ_FOREACH(conn, &connections, node) {
-		if (conn->cport1_id == cport_id)
-			return conn;
-	}
-
-	return NULL;
-}
-
 int hd_to_intf_cport_id(uint16_t hd_cport_id,
 			uint8_t *intf_id, uint16_t *cport_id)
 {
@@ -139,6 +114,32 @@ int hd_to_intf_cport_id(uint16_t hd_cport_id,
 	return -EINVAL;
 }
 
+static struct connection *_get_connection(struct interface *intf,
+					  uint16_t cport_id)
+{
+	struct connection *conn;
+
+	TAILQ_FOREACH(conn, &connections, node) {
+		if (conn->intf1 == intf && conn->cport1_id == cport_id)
+			return conn;
+		if (conn->intf2 == intf && conn->cport2_id == cport_id)
+			return conn;
+	}
+
+	return NULL;
+}
+
+static struct connection *get_connection(uint8_t intf_id, uint16_t cport_id)
+{
+	struct interface *intf;
+
+	intf = get_interface(intf_id);
+	if (!intf)
+		return NULL;
+
+	return _get_connection(intf, cport_id);
+}
+
 static void *interface_recv(void *data)
 {
 	int ret;
@@ -157,7 +158,7 @@ static void *interface_recv(void *data)
 
 		pr_dump(buffer, ret);
 
-		conn = cport_id_to_connection(intf, cport_id);
+		conn = _get_connection(intf, cport_id);
 		if (!conn) {
 			pr_err("Received data on invalid cport number\n");
 			continue;
@@ -363,20 +364,17 @@ int
 connection_destroy(uint8_t intf1_id, uint16_t cport1_id,
 		   uint8_t intf2_id, uint16_t cport2_id)
 {
-	struct interface *intf;
+	struct interface *intf2;
 	struct connection *conn;
 	struct controller *ctrl;
 
-	intf = get_interface(intf2_id);
-	if (!intf)
-		return -EINVAL;
-
-	conn = hd_cport_id_to_connection(cport1_id);
+	conn = get_connection(intf1_id, cport1_id);
 	if (!conn) {
 		return -EINVAL;
 	}
 
-	ctrl = intf->ctrl;
+	intf2 = conn->intf2;
+	ctrl = intf2->ctrl;
 	if (ctrl->connection_destroy)
 		ctrl->connection_destroy(conn);
 
@@ -430,18 +428,24 @@ static void controller_loop_exit(struct controller *ctrl)
 	pthread_join(ctrl->thread, NULL);
 }
 
-int controller_write(uint16_t cport_id, void *data, size_t len)
+int controller_write(uint8_t intf_id, uint16_t cport_id,
+		     void *data, size_t len)
 {
 	struct connection *conn;
 	struct controller *ctrl;
+	struct interface *intf;
 
-	conn = hd_cport_id_to_connection(cport_id);
+	intf = get_interface(intf_id);
+	if (!intf)
+		return -EINVAL;
+
+	conn = _get_connection(intf, cport_id);
 	if (!conn)
 		return -EINVAL;
 
 	pr_dump(data, len);
 
-	ctrl = conn->intf2->ctrl;
+	ctrl = intf->ctrl;
 	return ctrl->write(conn, data, len);
 }
 

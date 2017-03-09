@@ -99,7 +99,8 @@ int connection_create(uint8_t intf1_id, uint16_t cport1_id,
 int connection_destroy(uint8_t intf1_id, uint16_t cport1_id,
 		       uint8_t intf2_id, uint16_t cport2_id);
 
-int controller_write(uint16_t cport_id, void *data, size_t len);
+int controller_write(uint8_t intf_id, uint16_t cport_id,
+		     void *data, size_t len);
 void controllers_init(void);
 void controllers_exit(void);
 void register_controller(struct controller *controller);
