@@ -133,8 +133,10 @@ static struct connection *get_connection(uint8_t intf_id, uint16_t cport_id)
 	struct interface *intf;
 
 	intf = get_interface(intf_id);
-	if (!intf)
+	if (!intf) {
+		pr_err("Invalid interface id %d\n", intf_id);
 		return NULL;
+	}
 
 	return _get_connection(intf, cport_id);
 }
@@ -319,12 +321,16 @@ connection_create(uint8_t intf1_id, uint16_t cport1_id,
 	struct controller *ctrl;
 
 	intf1 = get_interface(intf1_id);
-	if (!intf1)
+	if (!intf1) {
+		pr_err("Invalid interface id %d\n", intf1_id);
 		return -EINVAL;
+	}
 
 	intf2 = get_interface(intf2_id);
-	if (!intf2)
+	if (!intf2) {
+		pr_err("Invalid interface id %d\n", intf2_id);
 		return -EINVAL;
+	}
 
 	conn = malloc(sizeof(*conn));
 	if (!conn)
@@ -370,6 +376,8 @@ connection_destroy(uint8_t intf1_id, uint16_t cport1_id,
 
 	conn = get_connection(intf1_id, cport1_id);
 	if (!conn) {
+		pr_err("Failed to get a connection for interface %d cport %d\n",
+			intf1_id, cport1_id);
 		return -EINVAL;
 	}
 
@@ -439,12 +447,17 @@ int controller_write(uint8_t intf_id, uint16_t cport_id,
 	struct interface *intf;
 
 	intf = get_interface(intf_id);
-	if (!intf)
+	if (!intf) {
+		pr_err("Invalid interface id %d\n", intf_id);
 		return -EINVAL;
+	}
 
 	conn = _get_connection(intf, cport_id);
-	if (!conn)
+	if (!conn) {
+		pr_err("Failed to get a connection for interface %d cport %d\n",
+			intf_id, cport_id);
 		return -EINVAL;
+	}
 
 	pr_dump(data, len);
 
