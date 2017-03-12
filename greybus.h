@@ -24,6 +24,7 @@
 struct operation {
 	struct gb_operation_msg_hdr *req;
 	struct gb_operation_msg_hdr *resp;
+	uint8_t intf_id;
 	uint16_t cport_id;
 	 TAILQ_ENTRY(operation) cnode;
 };

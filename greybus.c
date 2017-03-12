@@ -165,6 +165,7 @@ int greybus_send_request(uint8_t intf_id, uint16_t cport_id,
 	len = gb_operation_msg_size(op->req);
 	pr_dump(op->req, len);
 
+	op->intf_id = intf_id;
 	op->cport_id = cport_id;
 	TAILQ_INSERT_TAIL(&operations, op, cnode);
 	ret = controller_write(intf_id, cport_id, op->req, len);
@@ -269,12 +270,15 @@ int greybus_handler(uint8_t intf2_id, uint16_t cport_id,
 		TAILQ_REMOVE(&operations, op, cnode);
 		if (_greybus_alloc_response(op, hdr))
 			return -ENOMEM;
+
 		ret = _greybus_handler(intf2->gb_drivers[cport_id], op);
 	} else {
 		op = _greybus_alloc_operation(hdr);
 		if (!op)
 			return -ENOMEM;
 
+		op->intf_id = intf2_id;
+		op->cport_id = cport_id;
 		ret = _greybus_handler(intf2->gb_drivers[cport_id], op);
 		if (!op->resp) {
 			if (greybus_alloc_response(op, 0)) {
