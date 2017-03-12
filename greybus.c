@@ -22,9 +22,9 @@
 #include <stdlib.h>
 
 #include <debug.h>
+#include <greybus.h>
 #include <gb_netlink.h>
 
-#include "gbridge.h"
 #include "controller.h"
 
 static TAILQ_HEAD(operation_head, operation) operations;
