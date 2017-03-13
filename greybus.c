@@ -343,6 +343,25 @@ int greybus_register_driver(uint8_t intf_id, uint16_t cport_id,
 	return 0;
 }
 
+void greybus_unregister_driver(uint8_t intf_id, uint16_t cport_id)
+{
+	struct interface *intf;
+
+	intf = get_interface(intf_id);
+	if (!intf) {
+		pr_err("Invalid interface id %d\n", intf_id);
+		return;
+	}
+
+	if (cport_id >= GB_NETLINK_NUM_CPORT) {
+		pr_err("Invalid cport id %d\n", cport_id);
+		return;
+	}
+
+	intf->gb_drivers[cport_id] = NULL;
+}
+
+
 int greybus_init(void)
 {
 	TAILQ_INIT(&operations);

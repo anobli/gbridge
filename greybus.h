@@ -100,6 +100,7 @@ struct operation *greybus_alloc_operation(uint8_t type,
 int greybus_alloc_response(struct operation *op, size_t size);
 int greybus_register_driver(uint8_t intf_id, uint16_t cport_id,
 			    struct greybus_driver *driver);
+void greybus_unregister_driver(uint8_t intf_id, uint16_t cport_id);
 int greybus_handler(uint8_t intf_id, uint16_t cport_id,
 		    struct gb_operation_msg_hdr *hdr);
 int greybus_send_request(uint8_t intf_id, uint16_t cport_id,
