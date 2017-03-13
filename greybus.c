@@ -180,11 +180,17 @@ static int greybus_send_response(uint8_t intf_id, uint16_t cport_id,
 {
 	int len;
 	int ret;
+	struct connection *conn;
 
 	len = gb_operation_msg_size(op->resp);
 	pr_dump(op->resp, len);
 
-	ret = controller_write(intf_id, cport_id, op->resp, len);
+	conn = get_connection(intf_id, cport_id);
+	if (!conn)
+		return -EINVAL;
+
+	ret = controller_write(conn->intf1->id, conn->cport1_id,
+			       op->resp, len);
 	if (ret < 0)
 		return ret;
 

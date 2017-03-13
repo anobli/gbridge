@@ -128,7 +128,7 @@ static struct connection *_get_connection(struct interface *intf,
 	return NULL;
 }
 
-static struct connection *get_connection(uint8_t intf_id, uint16_t cport_id)
+struct connection *get_connection(uint8_t intf_id, uint16_t cport_id)
 {
 	struct interface *intf;
 
