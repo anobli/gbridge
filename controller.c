@@ -415,6 +415,7 @@ static void *controller_loop(void *data)
 	struct controller *ctrl = data;
 
 	ctrl->event_loop(ctrl);
+	pr_dbg("%s: The event loop stopped\n", ctrl->name);
 
 	return NULL;
 }
@@ -424,6 +425,7 @@ static int controller_loop_init(struct controller *ctrl)
 	if (!ctrl->event_loop)
 		return 0;
 
+	pr_dbg("%s: Creating the event loop thread\n", ctrl->name);
 	return pthread_create(&ctrl->thread, NULL, controller_loop, ctrl);
 }
 
@@ -432,9 +434,11 @@ static void controller_loop_exit(struct controller *ctrl)
 	if (!ctrl->event_loop)
 		return;
 
+	pr_dbg("%s: Exiting the event loop\n", ctrl->name);
 	if (ctrl->event_loop_stop)
 		ctrl->event_loop_stop(ctrl);
 
+	pr_dbg("%s: Waiting for the thread cancellation\n", ctrl->name);
 	pthread_cancel(ctrl->thread);
 	pthread_join(ctrl->thread, NULL);
 }
@@ -472,6 +476,7 @@ void controllers_init(void)
 
 	register_controllers();
 	TAILQ_FOREACH_SAFE(ctrl, &controllers, node, tmp) {
+		pr_dbg("%s: Initializing the controller\n", ctrl->name);
 		ret = ctrl->init(ctrl);
 		if (ret) {
 			pr_err("Failed to init %s: %d\n", ctrl->name, ret);
