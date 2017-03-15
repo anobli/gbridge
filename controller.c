@@ -397,7 +397,7 @@ void register_controller(struct controller *controller)
 	TAILQ_INSERT_TAIL(&controllers, controller, node);
 }
 
-static void register_controllers(void)
+void register_controllers(void)
 {
 #ifdef NETLINK
 	register_controller(&netlink_controller);
@@ -478,7 +478,6 @@ void controllers_init(void)
 	int ret;
 	struct controller *ctrl, *tmp;
 
-	register_controllers();
 	TAILQ_FOREACH_SAFE(ctrl, &controllers, node, tmp) {
 		pr_dbg("%s: Initializing the controller\n", ctrl->name);
 		ret = ctrl->init(ctrl);

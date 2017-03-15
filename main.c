@@ -57,6 +57,8 @@ int main(int argc, char *argv[])
 	signal(SIGHUP, signal_handler);
 	signal(SIGTERM, signal_handler);
 
+	register_controllers();
+
 	while ((c = getopt(argc, argv, "p:b:")) != -1) {
 		switch(c) {
 		case 'p':

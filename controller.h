@@ -106,6 +106,7 @@ int controller_write(uint8_t intf_id, uint16_t cport_id,
 void controllers_init(void);
 void controllers_exit(void);
 void register_controller(struct controller *controller);
+void register_controllers(void);
 
 struct interface *get_interface(uint8_t intf_id);
 struct connection *get_connection(uint8_t intf_id, uint16_t cport_id);
