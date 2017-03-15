@@ -311,7 +311,7 @@ static int svc_interface_resume_request(struct operation *op)
 
 static int svc_interface_set_pwrm_request(struct operation *op)
 {
-	return svc_interface_set_pwrm_response(op, GB_SVC_SETPWRM_PWR_LOCAL);
+	return svc_interface_set_pwrm_response(op, GB_SVC_SETPWRM_PWR_OK);
 }
 
 static int svc_pwrmon_rail_count_get_request(struct operation *op)
