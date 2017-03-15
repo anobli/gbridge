@@ -414,7 +414,9 @@ static void *controller_loop(void *data)
 {
 	struct controller *ctrl = data;
 
+	ctrl->event_loop_run = 1;
 	ctrl->event_loop(ctrl);
+	ctrl->event_loop_run = 0;
 	pr_dbg("%s: The event loop stopped\n", ctrl->name);
 
 	return NULL;
@@ -438,9 +440,11 @@ static void controller_loop_exit(struct controller *ctrl)
 	if (ctrl->event_loop_stop)
 		ctrl->event_loop_stop(ctrl);
 
-	pr_dbg("%s: Waiting for the thread cancellation\n", ctrl->name);
-	pthread_cancel(ctrl->thread);
-	pthread_join(ctrl->thread, NULL);
+	if (ctrl->event_loop_run) {
+		pr_dbg("%s: Waiting for the thread cancellation\n", ctrl->name);
+		pthread_cancel(ctrl->thread);
+		pthread_join(ctrl->thread, NULL);
+	}
 }
 
 int controller_write(uint8_t intf_id, uint16_t cport_id,

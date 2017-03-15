@@ -76,6 +76,7 @@ struct controller {
 	pthread_t thread;
 	 TAILQ_ENTRY(controller) node;
 	 TAILQ_HEAD(head, interface) interfaces;
+	int event_loop_run;
 };
 
 extern struct controller bluetooth_controller;
