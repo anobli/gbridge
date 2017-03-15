@@ -112,5 +112,6 @@ struct interface *get_interface(uint8_t intf_id);
 struct connection *get_connection(uint8_t intf_id, uint16_t cport_id);
 int hd_to_intf_cport_id(uint16_t hd_cport_id,
 			uint8_t *intf, uint16_t *cport_id);
+int register_gbsim_controller(const char *manifest_file);
 
 #endif				/* __CONTROLLER_H__ */

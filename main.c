@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
 
 	register_controllers();
 
-	while ((c = getopt(argc, argv, "p:b:")) != -1) {
+	while ((c = getopt(argc, argv, "p:b:m:")) != -1) {
 		switch(c) {
 		case 'p':
 			uart = optarg;
@@ -69,6 +69,11 @@ int main(int argc, char *argv[])
 				help();
 				return -EINVAL;
 			}
+			break;
+		case 'm':
+			ret = register_gbsim_controller(optarg);
+			if (ret)
+				return ret;
 			break;
 		default:
 			help();

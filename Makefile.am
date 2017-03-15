@@ -25,3 +25,10 @@ endif
 if UART
 gbridge_SOURCES += controllers/uart.c
 endif
+
+if GBSIM
+gbridge_SOURCES += controllers/gbsim.c
+gbridge_SOURCES += protocols/manifest.c
+gbridge_SOURCES += protocols/control.c
+gbridge_SOURCES += protocols/loopback.c
+endif

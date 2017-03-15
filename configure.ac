@@ -63,6 +63,16 @@ AC_ARG_ENABLE([netlink],
 esac])
 AM_CONDITIONAL([NETLINK], [test x$netlink = xtrue])
 
+AC_ARG_ENABLE([gbsim],
+[  --enable-gbsim    Enable GBSIM],
+[case "${enableval}" in
+	yes) gbsim=true ;
+	     AC_DEFINE([GBSIM], [1], ["GBSIM support"]) ;;
+	no)  gbsim=false ;;
+	*) AC_MSG_ERROR([bad value ${enableval} for --enable-gbsim]) ;;
+esac])
+AM_CONDITIONAL([GBSIM], [test x$gbsim = xtrue])
+
 AC_ARG_VAR([GBDIR], ["greybus sources directory"])
 AS_IF([test "$GBDIR" = ""], [
   AC_MSG_ERROR([Environment variable GBDIR needs to be set])
