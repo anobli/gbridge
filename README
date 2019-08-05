@@ -50,6 +50,13 @@ the cport number number in Greybus operation.
 The connection is initiated by the controller, so the module must open
 a socket for each cport to connect.
 
+### GBSIM
+GBSIM controller provides a way to test quickly and easily Greybus, Greybus netlink and gbridge.
+This simulates a module. This currently implements only few protocols:
+- control protocol
+- manifest protocol
+- loopback protocol
+
 ## Build
 
 ### Greybus
