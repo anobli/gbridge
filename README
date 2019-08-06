@@ -59,23 +59,28 @@ This simulates a module. This currently implements only few protocols:
 
 ## Build
 
-### Greybus
-To build gbridge, you will need Greybus sources.
-```
-git clone https://github.com/anobli/greybus.git -b gb_netlink
-cd greybus
-make && sudo make install
-```
+### Requirements
+- A kernel >= 4.9 or the Greybus headers
+- libnl, to build gbridge for the host
+- libblueooth, to enable support of bluetooth for gbridge in host mode
+- libavahi, required to support tcp/ip
 
-### gbridge
+### gbridge for the host
 ```
 git clone https://github.com/anobli/gbridge.git
 cd gbridge
 autoconf
 automake --add-missing
-GBDIR=path/to/greybus/ ./configure
+./configure --enable-netlink --enable-tcpip
 make
 ```
+
+### gbridge for a tcp/ip device
+cd gbridge
+autoconf
+automake --add-missing
+GBDIR=/path/to/greybus/headers ./configure --enable-gbsim --enable-tcpip
+make
 
 ## Usage
 
