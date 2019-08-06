@@ -311,7 +311,18 @@ static int svc_interface_resume_request(struct operation *op)
 
 static int svc_interface_set_pwrm_request(struct operation *op)
 {
-	return svc_interface_set_pwrm_response(op, GB_SVC_SETPWRM_PWR_OK);
+	struct gb_svc_intf_set_pwrm_request *req;
+	uint8_t tx_mode;
+	uint8_t rx_mode;
+
+	req = operation_to_request(op);
+	tx_mode = req->tx_mode;
+	rx_mode = req->rx_mode;
+
+	if (tx_mode == GB_SVC_UNIPRO_HIBERNATE_MODE &&
+		rx_mode == GB_SVC_UNIPRO_HIBERNATE_MODE)
+		return svc_interface_set_pwrm_response(op, GB_SVC_SETPWRM_PWR_OK);
+	return svc_interface_set_pwrm_response(op, GB_SVC_SETPWRM_PWR_LOCAL);
 }
 
 static int svc_pwrmon_rail_count_get_request(struct operation *op)
