@@ -56,7 +56,7 @@ static int tcpip_connection_create(struct connection *conn)
 	int ret;
 	struct sockaddr_in serv_addr;
 	struct tcpip_connection *tconn;
-	struct tcpip_device *td = conn->intf->priv;
+	struct tcpip_device *td = conn->intf2->priv;
 
 	tconn = malloc(sizeof(*tconn));
 	if (!tconn)
