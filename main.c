@@ -71,10 +71,15 @@ int main(int argc, char *argv[])
 			}
 			break;
 		case 'm':
+#ifdef GBSIM
 			ret = register_gbsim_controller(optarg);
 			if (ret)
 				return ret;
 			break;
+#else
+			pr_err("You must build gbridge with gbsim enabled\n");
+			return -EINVAL;
+#endif
 		default:
 			help();
 			return -EINVAL;
