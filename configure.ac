@@ -73,9 +73,19 @@ AC_ARG_ENABLE([gbsim],
 esac])
 AM_CONDITIONAL([GBSIM], [test x$gbsim = xtrue])
 
+KERNEL_VERSION=`uname -r`
+HIGHER_VERSION=`echo -e "$KERNEL_VERSION\n4.9.0" | sort -g -t '.' | tail --lines=1`
+AS_IF([test "$HIGHER_VERSION" = "4.9.0"], [
+	AC_MSG_ERROR(["A kernel >= 4.19 is required"])
+])
+
 AC_ARG_VAR([GBDIR], ["greybus sources directory"])
-AS_IF([test "$GBDIR" = ""], [
-  AC_MSG_ERROR([Environment variable GBDIR needs to be set])
+AC_ARG_VAR([KERNEL_DIR], ["kernel sources directory"])
+AS_IF([test "$KERNEL_DIR" = ""], [
+	KERNEL_DIR="/lib/modules/$KERNEL_VERSION/build"
+	AS_IF([test "$GBDIR" = ""], [
+		GBDIR="$KERNEL_DIR/drivers/staging/greybus"
+	])
 ])
 
 AC_OUTPUT
