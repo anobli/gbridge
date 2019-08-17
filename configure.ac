@@ -88,4 +88,9 @@ AS_IF([test "$KERNEL_DIR" = ""], [
 	])
 ])
 
+AC_ARG_VAR([GBNETLINKDIR], ["greybus netlink sources directory"])
+AS_IF([test "$GBNETLINKDIR" = ""], [
+	AC_MSG_ERROR(["You must give the path of Greybus netlink sources"])
+]])
+
 AC_OUTPUT
