@@ -22,8 +22,8 @@
 
 #include <debug.h>
 #include <controller.h>
-#include <protocols/protocols.h>
-#include <protocols/manifest.h>
+#include <greybus/protocols.h>
+#include <greybus/manifest.h>
 
 struct gbsim_controller {
 	const char *manifest_file;

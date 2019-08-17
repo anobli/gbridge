@@ -49,7 +49,7 @@ struct interface {
 	 TAILQ_ENTRY(interface) node;
 	pthread_t thread;
 
-	struct greybus_driver *gb_drivers[GB_NETLINK_NUM_CPORT];
+	struct greybus_driver *gb_drivers[GREYBUS_NUM_CPORT];
 };
 
 struct controller {

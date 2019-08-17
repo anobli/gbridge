@@ -28,6 +28,61 @@
 
 int run;
 
+static int gbridge_greybus_send_request(uint8_t intf_id, uint16_t cport_id,
+					void *data, size_t len)
+{
+	return controller_write(intf_id, cport_id, data, len);
+}
+
+static int gbridge_greybus_send_response(uint8_t intf_id, uint16_t cport_id,
+					 void *data, size_t len)
+{
+	struct connection *conn;
+
+	conn = get_connection(intf_id, cport_id);
+	if (!conn)
+		return -EINVAL;
+
+	return controller_write(conn->intf1->id, conn->cport1_id, data, len);
+}
+
+static struct greybus_driver *gbridge_greybus_driver(uint8_t intf_id,
+						     uint16_t cport_id)
+{
+	struct interface *intf;
+
+	intf = get_interface(intf_id);
+	if (!intf) {
+		pr_err("Invalid interface id %d\n", intf_id);
+		return NULL;
+	}
+
+	return intf->gb_drivers[cport_id];
+}
+
+static int gbridge_greybus_register_driver(uint8_t intf_id, uint16_t cport_id,
+					   struct greybus_driver *driver)
+{
+	struct interface *intf;
+
+	intf = get_interface(intf_id);
+	if (!intf) {
+		pr_err("Invalid interface id %d\n", intf_id);
+		return -EINVAL;
+	}
+
+	intf->gb_drivers[cport_id] = driver;
+
+	return 0;
+}
+
+static struct greybus_platform gbridge_platform = {
+	.greybus_send_request = gbridge_greybus_send_request,
+	.greybus_send_response = gbridge_greybus_send_response,
+	.greybus_driver = gbridge_greybus_driver,
+	.greybus_register_driver = gbridge_greybus_register_driver,
+};
+
 static void help(void)
 {
 	printf("gbridge: Greybus bridge application\n"
@@ -86,7 +141,7 @@ int main(int argc, char *argv[])
 		}
 	}
 
-	ret = greybus_init();
+	ret = greybus_init(&gbridge_platform);
 	if (ret) {
 		pr_err("Failed to init Greybus\n");
 		return ret;

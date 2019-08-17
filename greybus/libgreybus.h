@@ -16,17 +16,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef _LIBGREYBUS_H_
+#define _LIBGREYBUS_H_
+
+#include <stdint.h>
+#include <stdlib.h>
+#include <linux/types.h>
 #include <sys/queue.h>
 
-#ifndef _GREYBUS_H_
-#define _GREYBUS_H_
+#define __packed		__attribute__((__packed__))
+#define BIT(nr)			(1UL << (nr))
+
+/* Kernel headers */
+#include <greybus_protocols.h>
+#include <greybus_manifest.h>
+
+#define GREYBUS_MTU		(2048)
+#define GREYBUS_NUM_CPORT	(32)
+
+#define OP_RESPONSE             (0x80)
+
+#define CONTROL_CPORT           (0)
 
 struct operation {
 	struct gb_operation_msg_hdr *req;
 	struct gb_operation_msg_hdr *resp;
 	uint8_t intf_id;
 	uint16_t cport_id;
-	 TAILQ_ENTRY(operation) cnode;
+	TAILQ_ENTRY(operation) cnode;
 };
 
 typedef int operation_handler_t(struct operation *op);
@@ -40,6 +57,17 @@ struct greybus_driver {
 	const char *name;
 	struct operation_handler *operations;
 	uint8_t count;
+};
+
+struct greybus_platform {
+	int (*greybus_send_request)(uint8_t intf_id, uint16_t cport_id,
+				    void *data, size_t len);
+	int (*greybus_send_response)(uint8_t intf_id, uint16_t cport_id,
+				     void *data, size_t len);
+	struct greybus_driver *(*greybus_driver)(uint8_t intf_id,
+						 uint16_t cport_id);
+	int (*greybus_register_driver)(uint8_t intf_id, uint16_t cport_id,
+				       struct greybus_driver *driver);
 };
 
 static inline int greybus_empty_callback(struct operation *op)
@@ -94,7 +122,7 @@ static inline int greybus_empty_callback(struct operation *op)
 	le16toh(((struct gb_operation_msg_hdr *)(hdr))->size)
 
 
-int greybus_init(void);
+int greybus_init(struct greybus_platform *platform);
 struct operation *greybus_alloc_operation(uint8_t type,
 					  void *payload, size_t len);
 int greybus_alloc_response(struct operation *op, size_t size);
@@ -106,4 +134,4 @@ int greybus_handler(uint8_t intf_id, uint16_t cport_id,
 int greybus_send_request(uint8_t intf_id, uint16_t cport_id,
 			 struct operation *op);
 
-#endif /* _GREYBUS_H_ */
+#endif /* _LIBGREYBUS_H_ */

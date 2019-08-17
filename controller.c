@@ -148,10 +148,10 @@ static void *interface_recv(void *data)
 	struct connection *conn;
 	struct interface *intf = data;
 	struct controller *ctrl = intf->ctrl;
-	uint8_t buffer[GB_NETLINK_MTU];
+	uint8_t buffer[GREYBUS_MTU];
 
 	while (1) {
-		ret = ctrl->intf_read(intf, &cport_id, buffer, GB_NETLINK_MTU);
+		ret = ctrl->intf_read(intf, &cport_id, buffer, GREYBUS_MTU);
 		if (ret < 0) {
 			pr_err("Failed to read data: %d\n", ret);
 			continue;
@@ -284,10 +284,10 @@ void *connection_recv(void *data)
 	struct connection *conn = data;
 	struct interface *intf2 = conn->intf2;
 	struct controller *ctrl = intf2->ctrl;
-	uint8_t buffer[GB_NETLINK_MTU];
+	uint8_t buffer[GREYBUS_MTU];
 
 	while (1) {
-		ret = ctrl->read(conn, buffer, GB_NETLINK_MTU);
+		ret = ctrl->read(conn, buffer, GREYBUS_MTU);
 		if (ret < 0) {
 			pr_err("Failed to read data: %d\n", ret);
 			break;

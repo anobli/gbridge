@@ -22,12 +22,10 @@
 #include <stdlib.h>
 
 #include <debug.h>
-#include <greybus.h>
-#include <gb_netlink.h>
-
-#include "controller.h"
+#include <greybus/libgreybus.h>
 
 static TAILQ_HEAD(operation_head, operation) operations;
+static struct greybus_platform *g_platform;
 
 enum gb_operation_result {
 	GB_OP_SUCCESS		= 0x00,
@@ -135,7 +133,7 @@ static int _greybus_alloc_response(struct operation *op,
 int greybus_alloc_response(struct operation *op, size_t size)
 {
 	size += sizeof(*op->resp);
-	if (size > GB_NETLINK_MTU)
+	if (size > GREYBUS_MTU)
 		return -EINVAL;
 
 	op->resp = malloc(size);
@@ -168,7 +166,7 @@ int greybus_send_request(uint8_t intf_id, uint16_t cport_id,
 	op->intf_id = intf_id;
 	op->cport_id = cport_id;
 	TAILQ_INSERT_TAIL(&operations, op, cnode);
-	ret = controller_write(intf_id, cport_id, op->req, len);
+	ret = g_platform->greybus_send_request(intf_id, cport_id, op->req, len);
 	if (ret < 0)
 		return ret;
 
@@ -180,17 +178,12 @@ static int greybus_send_response(uint8_t intf_id, uint16_t cport_id,
 {
 	int len;
 	int ret;
-	struct connection *conn;
 
 	len = gb_operation_msg_size(op->resp);
 	pr_dump(op->resp, len);
 
-	conn = get_connection(intf_id, cport_id);
-	if (!conn)
-		return -EINVAL;
-
-	ret = controller_write(conn->intf1->id, conn->cport1_id,
-			       op->resp, len);
+	ret = g_platform->greybus_send_response(intf_id, cport_id,
+						op->resp, len);
 	if (ret < 0)
 		return ret;
 
@@ -251,17 +244,12 @@ int greybus_handler(uint8_t intf2_id, uint16_t cport_id,
 {
 	int ret;
 	struct operation *op;
-	struct interface *intf2;
+	struct greybus_driver *driver;
 
 	pr_dump(hdr, gb_operation_msg_size(hdr));
 
-	intf2 = get_interface(intf2_id);
-	if (!intf2) {
-		pr_err("Invalid interface id %d\n", intf2_id);
-		return -EINVAL;
-	}
-
-	if (!intf2->gb_drivers[cport_id]) {
+	driver = g_platform->greybus_driver(intf2_id, cport_id);
+	if (!driver) {
 		pr_err("No driver registered for cport %d\n", cport_id);
 		return -EINVAL;
 	}
@@ -277,7 +265,7 @@ int greybus_handler(uint8_t intf2_id, uint16_t cport_id,
 		if (_greybus_alloc_response(op, hdr))
 			return -ENOMEM;
 
-		ret = _greybus_handler(intf2->gb_drivers[cport_id], op);
+		ret = _greybus_handler(driver, op);
 	} else {
 		op = _greybus_alloc_operation(hdr);
 		if (!op)
@@ -285,7 +273,7 @@ int greybus_handler(uint8_t intf2_id, uint16_t cport_id,
 
 		op->intf_id = intf2_id;
 		op->cport_id = cport_id;
-		ret = _greybus_handler(intf2->gb_drivers[cport_id], op);
+		ret = _greybus_handler(driver, op);
 		if (!op->resp) {
 			if (greybus_alloc_response(op, 0)) {
 				pr_err("Failed to alloc greybus response\n");
@@ -310,20 +298,13 @@ int greybus_register_driver(uint8_t intf_id, uint16_t cport_id,
 	int i = 0;
 	int id = 0;
 	int id_min = -1;
-	struct interface *intf;
 
-	intf = get_interface(intf_id);
-	if (!intf) {
-		pr_err("Invalid interface id %d\n", intf_id);
-		return -EINVAL;
-	}
-
-	if (cport_id >= GB_NETLINK_NUM_CPORT) {
+	if (cport_id >= GREYBUS_NUM_CPORT) {
 		pr_err("Invalid cport id %d\n", cport_id);
 		return -EINVAL;
 	}
 
-	if (intf->gb_drivers[cport_id]) {
+	if (g_platform->greybus_driver(intf_id, cport_id)) {
 		pr_err("A driver has already been registered for cport id %d\n",
 			cport_id);
 		return -EINVAL;
@@ -344,33 +325,21 @@ int greybus_register_driver(uint8_t intf_id, uint16_t cport_id,
 		id++;
 	}
 
-	intf->gb_drivers[cport_id] = driver;
-
-	return 0;
+	return g_platform->greybus_register_driver(intf_id, cport_id, driver);
 }
 
 void greybus_unregister_driver(uint8_t intf_id, uint16_t cport_id)
 {
-	struct interface *intf;
-
-	intf = get_interface(intf_id);
-	if (!intf) {
-		pr_err("Invalid interface id %d\n", intf_id);
-		return;
-	}
-
-	if (cport_id >= GB_NETLINK_NUM_CPORT) {
-		pr_err("Invalid cport id %d\n", cport_id);
-		return;
-	}
-
-	intf->gb_drivers[cport_id] = NULL;
+	g_platform->greybus_register_driver(intf_id, cport_id, NULL);
 }
 
 
-int greybus_init(void)
+int greybus_init(struct greybus_platform *platform)
 {
 	TAILQ_INIT(&operations);
+	if (!platform)
+		return -EINVAL;
+	g_platform = platform;
 
 	return 0;
 }

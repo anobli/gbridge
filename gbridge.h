@@ -25,18 +25,10 @@
 #include <linux/types.h>
 #include <sys/queue.h>
 
-#define __packed  __attribute__((__packed__))
-#define BIT(nr)                 (1UL << (nr))
-
-#include <greybus.h>
-#include <greybus_protocols.h>
-#include <greybus_manifest.h>
-#include <gb_netlink.h>
+#include <greybus/libgreybus.h>
 
 #define SVC_CPORT		0
-#define CONTROL_CPORT		0
 #define AP_INTF_ID		0
-#define OP_RESPONSE		0x80
 
 #ifndef TAILQ_FOREACH_SAFE
 #define TAILQ_FOREACH_SAFE(var, head, field, tvar)                      \

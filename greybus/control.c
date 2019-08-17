@@ -20,8 +20,8 @@
 #include <errno.h>
 #include <string.h>
 
-#include <gbridge.h>
-#include <protocols/manifest.h>
+#include <greybus/libgreybus.h>
+#include <greybus/manifest.h>
 
 #define CONTROL_VERSION_MAJOR 0
 #define CONTROL_VERSION_MINOR 1

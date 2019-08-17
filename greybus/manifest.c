@@ -21,9 +21,9 @@
 #include <stdlib.h>
 
 #include <debug.h>
-#include <gbridge.h>
-#include <protocols/protocols.h>
-#include <protocols/manifest.h>
+#include <greybus/libgreybus.h>
+#include <greybus/protocols.h>
+#include <greybus/manifest.h>
 
 LIST_HEAD(manifest_head, manifest) manifests = LIST_HEAD_INITIALIZER(manifests);
 

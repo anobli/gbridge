@@ -21,6 +21,7 @@
 
 #include <debug.h>
 #include <gbridge.h>
+#include <gb_netlink.h>
 #include <controller.h>
 
 #include <netlink/genl/mngt.h>

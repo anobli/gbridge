@@ -19,7 +19,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include <gbridge.h>
+#include <greybus/libgreybus.h>
 
 static int gb_loopback_transfer_response(struct operation *op,
 					 uint32_t len, uint32_t reserved0,

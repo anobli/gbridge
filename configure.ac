@@ -4,7 +4,7 @@
 AC_PREREQ([2.69])
 AC_INIT([greybus-bridge], [0.1], [])
 AM_INIT_AUTOMAKE([subdir-objects])
-
+AC_PROG_RANLIB
 
 # Checks for programs.
 AC_PROG_CC
@@ -16,6 +16,7 @@ AC_CHECK_LIB([nl-genl-3], [genl_register_family])
 AC_CHECK_LIB([pthread], [pthread_create])
 AC_CHECK_LIB([avahi-common], [main])
 AC_CHECK_LIB([avahi-client], [main])
+AC_CHECK_LIB([greybus], [greybus_init])
 
 AC_CONFIG_SRCDIR([main.c])
 AC_CONFIG_HEADERS([config.h])
