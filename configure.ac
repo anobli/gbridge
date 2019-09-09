@@ -76,7 +76,7 @@ AM_CONDITIONAL([GBSIM], [test x$gbsim = xtrue])
 KERNEL_VERSION=`uname -r`
 HIGHER_VERSION=`echo -e "$KERNEL_VERSION\n4.9.0" | sort -V | tail -1`
 AS_IF([test "$HIGHER_VERSION" = "4.9.0"], [
-	AC_MSG_ERROR(["A kernel >= 4.19 is required"])
+	AC_MSG_ERROR(["A kernel >= 4.9 is required"])
 ])
 
 AC_ARG_VAR([GBDIR], ["greybus sources directory"])
